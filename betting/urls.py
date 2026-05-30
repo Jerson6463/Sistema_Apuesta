@@ -1,6 +1,7 @@
 from django.urls import path
 
 from betting.views import (
+    ActualizarCuotaView,
     ApuestaInPlayView,
     CashOutView,
     CrearApuestaCombinada_View,
@@ -18,4 +19,5 @@ urlpatterns = [
     path("apuestas/mis-apuestas/", MisApuestasView.as_view(), name="mis_apuestas"),
     path("apuestas/cash-out/", CashOutView.as_view(), name="cash_out"),
     path("apuestas/combinada/", CrearApuestaCombinada_View.as_view(), name="apuesta_combinada"),
+    path("eventos/<int:evento_id>/cuotas/<int:cuota_id>/", ActualizarCuotaView.as_view(), name="actualizar_cuota"),
 ]

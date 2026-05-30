@@ -130,6 +130,49 @@ class CashOutView(APIView):
         })
 
 
+class ActualizarCuotaView(APIView):
+    """
+    PATCH /api/eventos/<evento_id>/cuotas/<cuota_id>/
+    Solo staff. Actualiza el valor de una cuota y notifica a todos los
+    clientes WebSocket suscritos al canal del evento.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def patch(self, request, evento_id, cuota_id):
+        from betting.models import Cuota
+        from betting.services import registrar_cambio_cuota
+        from decimal import Decimal as Dec
+
+        try:
+            cuota = Cuota.objects.select_related("mercado__evento").get(
+                pk=cuota_id, mercado__evento_id=evento_id
+            )
+        except Cuota.DoesNotExist:
+            return Response({"error": "Cuota no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+        nuevo_valor = request.data.get("valor")
+        if not nuevo_valor:
+            return Response({"error": "El campo 'valor' es requerido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            nuevo_valor_decimal = Dec(str(nuevo_valor))
+        except Exception:
+            return Response({"error": "Valor de cuota inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if nuevo_valor_decimal <= Dec("1.0000"):
+            return Response({"error": "La cuota debe ser mayor a 1.00."}, status=status.HTTP_400_BAD_REQUEST)
+
+        valor_anterior = cuota.valor
+        registrar_cambio_cuota(cuota, nuevo_valor_decimal)
+
+        return Response({
+            "mensaje": "Cuota actualizada. Los clientes WebSocket han sido notificados.",
+            "cuota_id": cuota_id,
+            "valor_anterior": str(valor_anterior),
+            "valor_nuevo": str(nuevo_valor_decimal),
+        })
+
+
 class ApuestaInPlayView(APIView):
     """
     POST /api/apuestas/in-play/
