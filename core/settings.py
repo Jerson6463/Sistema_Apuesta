@@ -64,6 +64,14 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 ASGI_APPLICATION = "core.asgi.application"
 
+# ── Caché (Redis) — requerido por django-ratelimit ────────────────────────────
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ.get("REDIS_URL", "redis://redis:6379/0"),
+    }
+}
+
 # ── Base de datos ─────────────────────────────────────────────────────────────
 DATABASES = {
     "default": {
