@@ -24,9 +24,6 @@ def es_dni_peruano_valido(dni: str, digito_verificador: str) -> bool:
     Recibe los 8 dígitos del documento y el dígito verificador (numérico o letra
     ORE impresa en la esquina del DNI físico). No depende de Django ni de I/O.
 
-    Args:
-        dni: Cadena de exactamente 8 dígitos numéricos.
-        digito_verificador: Un carácter (0-9) o letra ORE (K, A, B, …, J).
 
     Returns:
         True si el verificador coincide con el cálculo RENIEC; False en caso contrario.

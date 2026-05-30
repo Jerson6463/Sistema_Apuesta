@@ -7,7 +7,7 @@
 
 ## Política del equipo
 
-Usamos IA como apoyo al aprendizaje, no como reemplazo del criterio propio. Todo código entregado es comprendido y puede defenderse línea por línea.
+Se utilizó Inteligencia Artificial (IA) como **herramienta de apoyo**, representando aproximadamente un **30% del trabajo total**, principalmente para la generación de ejemplos, documentación explicativa y boilerplate de código. Todo el resto del código, la lógica de negocio y las decisiones arquitectónicas fueron diseñadas, implementadas y verificadas por los autores, asegurando que cada línea pueda ser explicada y defendida.
 
 ---
 
@@ -28,15 +28,15 @@ Usamos IA como apoyo al aprendizaje, no como reemplazo del criterio propio. Todo
 
 ## Lo que NO fue generado por IA
 
-- La lógica de negocio de `recargar_fichas`, `bloquear_fondos_apuesta`, `liberar_fondos_ganancia`
-- Las transiciones FSM de `Apuesta` y `Evento`
-- El algoritmo de encadenamiento de hash en `audit/services.py`
-- Los tests de invariantes financieras (TDD)
-- Los tests de concurrencia con `threading`
-- Las decisiones documentadas en los ADRs
+- La lógica de negocio de `recargar_fichas`, `bloquear_fondos_apuesta`, `liberar_fondos_ganancia`  
+- Las transiciones FSM de `Apuesta` y `Evento`  
+- El algoritmo de encadenamiento de hash en `audit/services.py`  
+- Los tests de invariantes financieras (TDD)  
+- Los tests de concurrencia con `threading`  
+- Las decisiones documentadas en los ADRs  
 
 ---
 
 ## Compromiso
 
-Todo código en este repositorio que lleve mi nombre como autor puede ser explicado y modificado en vivo durante el walkthrough.
+Todo código en este repositorio que lleve mi nombre como autor puede ser **explicado, modificado y defendido en vivo** durante el walkthrough, asegurando total comprensión y control humano sobre las soluciones implementadas.
