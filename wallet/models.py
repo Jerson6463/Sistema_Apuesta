@@ -53,7 +53,7 @@ class EntradaContable(models.Model):
         verbose_name="Monto",
     )
     direccion = models.CharField(
-        max_length=6,
+        max_length=7,
         choices=DireccionMovimiento.choices,
         verbose_name="Dirección",
     )

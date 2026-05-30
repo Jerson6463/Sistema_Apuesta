@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
                 ("monto", models.DecimalField(decimal_places=4, max_digits=18, verbose_name="Monto")),
                 ("direccion", models.CharField(
                     choices=[("DEBITO", "Débito"), ("CREDITO", "Crédito")],
-                    max_length=6,
+                    max_length=7,
                     verbose_name="Dirección",
                 )),
                 ("id_transaccion", models.UUIDField(db_index=True, verbose_name="ID de transacción (idempotency key)")),
