@@ -7,6 +7,7 @@ from users.views import (
     LimiteJuegoView,
     PerfilView,
     RegistroView,
+    VerificarKYCView,
 )
 
 urlpatterns = [
@@ -17,4 +18,5 @@ urlpatterns = [
     path("limites/", LimiteJuegoView.as_view(), name="limites_juego"),
     path("autoexclusion/", AutoExclusionView.as_view(), name="autoexclusion"),
     path("autoexclusiones/", AutoExclusionesListView.as_view(), name="autoexclusiones_list"),
+    path("<int:pk>/verificar-kyc/", VerificarKYCView.as_view(), name="verificar_kyc"),
 ]
