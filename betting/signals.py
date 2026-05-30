@@ -4,6 +4,28 @@ from django.dispatch import receiver
 from betting.models import Apuesta, HistorialCuota
 
 
+@receiver(post_save, sender=HistorialCuota)
+def registrar_cambio_cuota_en_auditoria(sender, instance, created, **kwargs):
+    if not created:
+        return
+    try:
+        from audit.services import registrar_evento
+        from audit.models import TipoEventoAuditoria
+        registrar_evento(
+            tipo=TipoEventoAuditoria.ODDS,
+            payload={
+                "cuota_id": instance.cuota_id,
+                "seleccion": instance.cuota.seleccion,
+                "mercado_id": instance.cuota.mercado_id,
+                "evento_id": instance.cuota.mercado.evento_id,
+                "valor_anterior": str(instance.valor_anterior),
+                "valor_nuevo": str(instance.valor_nuevo),
+            },
+        )
+    except Exception:
+        pass
+
+
 @receiver(post_save, sender=Apuesta)
 def registrar_apuesta_en_auditoria(sender, instance, created, **kwargs):
     if not created:
