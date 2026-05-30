@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% block title %}Wallet — FairBet Lab{% endblock %}
+{% block nav_wallet %}active{% endblock %}
+
+{% block content %}
+<div class="page-inner">
+
+  <div class="page-title"><i class="fa-solid fa-wallet"></i> Mi Wallet</div>
+  <p class="page-sub">Gestiona tus fichas virtuales, límites y controles de juego responsable</p>
+
+  <!-- BALANCE -->
+  <div class="balance-hero">
+    <div>
+      <div class="balance-label"><i class="fa-solid fa-coins"></i> Saldo disponible</div>
+      <div class="balance-amount">S/ {{ saldo|floatformat:2 }}</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="abrirModal('recargar')">
+        <i class="fa-solid fa-plus"></i> Recargar fichas
+      </button>
+      <button class="btn btn-ghost" onclick="abrirModal('retirar')">
+        <i class="fa-solid fa-arrow-up-from-bracket"></i> Retirar fichas
+      </button>
+    </div>
+  </div>
+
+  <!-- STATS MENSUALES -->
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-arrow-down"></i> Recargado este mes</div>
+      <div class="value c-primary">S/ {{ total_recargado|floatformat:2 }}</div>
+      <div class="sub">fichas virtuales</div>
+    </div>
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-ticket"></i> Apostado este mes</div>
+      <div class="value c-blue">S/ {{ total_apostado|floatformat:2 }}</div>
+      <div class="sub">en apuestas</div>
+    </div>
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-trophy"></i> Ganado este mes</div>
+      <div class="value c-green">S/ {{ total_ganado|floatformat:2 }}</div>
+      <div class="sub">en premios</div>
+    </div>
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-scale-balanced"></i> Balance neto</div>
+      <div class="value {% if balance_neto >= 0 %}c-green{% else %}c-red{% endif %}">
+        S/ {{ balance_neto|floatformat:2 }}
+      </div>
+      <div class="sub">resultado del mes</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-historial" onclick="cambiarTab('historial')">
+      <i class="fa-solid fa-list"></i> Historial
+    </button>
+    <button class="tab-btn" id="tab-limites" onclick="cambiarTab('limites')">
+      <i class="fa-solid fa-shield-halved"></i> Límites de Juego
+    </button>
+    <button class="tab-btn" id="tab-exclusion" onclick="cambiarTab('exclusion')">
+      <i class="fa-solid fa-ban"></i> Autoexclusión
+    </button>
+  </div>
+
+  <!-- HISTORIAL (renderizado por Django) -->
+  <div id="panel-historial">
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><i class="fa-solid fa-tag"></i> Tipo</th>
+            <th>Dirección</th>
+            <th>Monto</th>
+            <th><i class="fa-regular fa-clock"></i> Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if historial %}
+            {% for entrada in historial %}
+            <tr>
+              <td style="font-weight:500">
+                {% if entrada.tipo_referencia == 'recarga' %}Recarga
+                {% elif entrada.tipo_referencia == 'retiro' %}Retiro
+                {% elif entrada.tipo_referencia == 'apuesta' %}Apuesta
+                {% elif entrada.tipo_referencia == 'pago_ganancia' %}Premio
+                {% elif entrada.tipo_referencia == 'perdida' %}Pérdida
+                {% elif entrada.tipo_referencia == 'devolucion' %}Devolución
+                {% elif entrada.tipo_referencia == 'cash_out' %}Cash-out
+                {% elif entrada.tipo_referencia == 'bono' %}Bono
+                {% else %}{{ entrada.tipo_referencia }}
+                {% endif %}
+              </td>
+              <td>
+                {% if entrada.direccion == 'CREDITO' %}
+                  <span class="badge badge-green"><i class="fa-solid fa-arrow-down"></i> Entrada</span>
+                {% else %}
+                  <span class="badge badge-red"><i class="fa-solid fa-arrow-up"></i> Salida</span>
+                {% endif %}
+              </td>
+              <td style="font-weight:700;font-variant-numeric:tabular-nums;
+                         color:{% if entrada.direccion == 'CREDITO' %}var(--green){% else %}var(--red-lt){% endif %}">
+                {% if entrada.direccion == 'CREDITO' %}+{% else %}-{% endif %}
+                S/ {{ entrada.monto|floatformat:2 }}
+              </td>
+              <td style="color:var(--text-3);font-size:12px">
+                {{ entrada.creado_en|date:"d M Y, H:i" }}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4" style="text-align:center;padding:40px;color:var(--text-3)">
+                <i class="fa-solid fa-inbox" style="font-size:28px;display:block;margin-bottom:8px"></i>
+                Sin movimientos aún
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LIMITES (JS carga desde API) -->
+  <div id="panel-limites" style="display:none">
+    <div class="alert alert-warning">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>Bajar el límite es <strong>inmediato</strong>. Subirlo requiere <strong>24 horas</strong> de espera.</span>
+    </div>
+    {% if limites %}
+    <div style="display:grid;gap:14px">
+      {% for campo, label, icono in limits_display %}
+      <div class="limit-card">
+        <div class="lc-header">
+          <div class="lc-label"><i class="fa-solid {{ icono }}" style="color:var(--primary)"></i> {{ label }}</div>
+          <div class="lc-value">S/ {{ campo|floatformat:2 }}</div>
+        </div>
+        <div class="limit-input-row">
+          <input type="number" id="inp-{{ campo }}" class="form-control"
+                 value="{{ campo }}" min="1"/>
+          <button class="btn btn-primary btn-sm" onclick="actualizarLimite('{{ campo }}')">
+            <i class="fa-solid fa-check"></i> Actualizar
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div id="limites-wrap">
+      <div style="text-align:center;padding:40px;color:var(--text-3)">
+        <i class="fa-solid fa-spinner fa-spin"></i> Cargando límites...
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- AUTOEXCLUSION -->
+  <div id="panel-exclusion" style="display:none">
+    <div class="alert alert-danger">
+      <i class="fa-solid fa-ban"></i>
+      <span>La autoexclusión es <strong>irreversible antes del plazo elegido</strong>.</span>
+    </div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Selecciona el periodo:</div>
+    <div class="excl-grid">
+      <div class="excl-card" onclick="solicitarExclusion('temporal_7')">
+        <div class="ec-num">7</div><div class="ec-unit">días</div>
+      </div>
+      <div class="excl-card" onclick="solicitarExclusion('temporal_30')">
+        <div class="ec-num">30</div><div class="ec-unit">días</div>
+      </div>
+      <div class="excl-card" onclick="solicitarExclusion('temporal_90')">
+        <div class="ec-num">90</div><div class="ec-unit">días</div>
+      </div>
+      <div class="excl-card danger" onclick="solicitarExclusion('indefinida')">
+        <div class="ec-num" style="color:var(--red-lt)">Indef.</div>
+        <div class="ec-unit">Sin plazo</div>
+      </div>
+    </div>
+    <div id="excl-status" style="margin-top:16px"></div>
+  </div>
+
+</div>
+
+<!-- MODAL RECARGAR / RETIRAR -->
+<div class="modal-bg" id="modal-op" style="display:none" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal-box">
+    <h3 id="modal-title">Recargar fichas</h3>
+    <p id="modal-desc">Las fichas son virtuales y no tienen valor monetario real.</p>
+    <div class="form-group">
+      <label class="form-label"><i class="fa-solid fa-coins"></i> Monto (S/)</label>
+      <input id="modal-monto" type="number" class="form-control" placeholder="Ej: 100" min="1" step="1"/>
+    </div>
+    <div id="modal-err" class="form-error" style="display:none">
+      <i class="fa-solid fa-circle-xmark"></i><span id="modal-err-txt"></span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="modal-btn" onclick="ejecutarOperacion()">Confirmar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let opActual = '';
+
+function cambiarTab(tab) {
+  ['historial','limites','exclusion'].forEach(t => {
+    document.getElementById(`panel-${t}`).style.display = t === tab ? 'block' : 'none';
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+  });
+  if (tab === 'limites') cargarLimites();
+}
+
+function abrirModal(op) {
+  opActual = op;
+  document.getElementById('modal-title').textContent = op === 'recargar' ? 'Recargar fichas' : 'Retirar fichas';
+  document.getElementById('modal-desc').textContent  = op === 'recargar'
+    ? 'Las fichas son virtuales sin valor real. Límite diario: S/ 500.'
+    : 'Retira fichas disponibles de tu wallet virtual.';
+  document.getElementById('modal-btn').innerHTML = op === 'recargar'
+    ? '<i class="fa-solid fa-plus"></i> Recargar'
+    : '<i class="fa-solid fa-arrow-up-from-bracket"></i> Retirar';
+  document.getElementById('modal-monto').value = '';
+  document.getElementById('modal-err').style.display = 'none';
+  document.getElementById('modal-op').style.display  = 'flex';
+}
+
+function cerrarModal() { document.getElementById('modal-op').style.display = 'none'; }
+
+async function ejecutarOperacion() {
+  const monto = parseFloat(document.getElementById('modal-monto').value);
+  const errEl = document.getElementById('modal-err');
+  errEl.style.display = 'none';
+  if (!monto || monto <= 0) {
+    document.getElementById('modal-err-txt').textContent = 'Ingresa un monto válido';
+    errEl.style.display = 'flex'; return;
+  }
+  const endpoint = opActual === 'recargar' ? '/api/wallet/recargar/' : '/api/wallet/retirar/';
+  const btn = document.getElementById('modal-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    const res = await apiFetch(endpoint, {
+      method: 'POST',
+      body: JSON.stringify({ monto: monto.toFixed(4), id_transaccion: crypto.randomUUID() })
+    });
+    const d = await res.json();
+    if (res.ok) {
+      cerrarModal();
+      toast(`${opActual === 'recargar' ? 'Recarga' : 'Retiro'} exitoso: S/ ${monto.toFixed(2)}`, 'success');
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      document.getElementById('modal-err-txt').textContent = d.error || d.detail || 'Error en la operación';
+      errEl.style.display = 'flex';
+    }
+  } catch {
+    document.getElementById('modal-err-txt').textContent = 'Error de conexión';
+    errEl.style.display = 'flex';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = opActual === 'recargar'
+      ? '<i class="fa-solid fa-plus"></i> Recargar'
+      : '<i class="fa-solid fa-arrow-up-from-bracket"></i> Retirar';
+  }
+}
+
+async function cargarLimites() {
+  const wrap = document.getElementById('limites-wrap');
+  const res = await apiFetch('/api/usuarios/limites/');
+  if (!res?.ok) return;
+  const d = await res.json();
+  const campos = [
+    { key: 'limite_diario',   label: 'Límite diario',   icon: 'fa-sun' },
+    { key: 'limite_semanal',  label: 'Límite semanal',  icon: 'fa-calendar-week' },
+    { key: 'limite_mensual',  label: 'Límite mensual',  icon: 'fa-calendar' },
+  ];
+  if (wrap) wrap.innerHTML = campos.map(c => `
+    <div class="limit-card">
+      <div class="lc-header">
+        <div class="lc-label"><i class="fa-solid ${c.icon}" style="color:var(--primary)"></i> ${c.label}</div>
+        <div class="lc-value">S/ ${parseFloat(d[c.key]).toFixed(2)}</div>
+      </div>
+      <div class="limit-input-row">
+        <input type="number" id="inp-${c.key}" class="form-control"
+               value="${parseFloat(d[c.key]).toFixed(0)}" min="1"/>
+        <button class="btn btn-primary btn-sm" onclick="actualizarLimite('${c.key}')">
+          <i class="fa-solid fa-check"></i> Actualizar
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+async function actualizarLimite(campo) {
+  const val = document.getElementById(`inp-${campo}`).value;
+  const res = await apiFetch('/api/usuarios/limites/', {
+    method: 'PATCH', body: JSON.stringify({ [campo]: parseFloat(val).toFixed(4) })
+  });
+  const d = await res.json();
+  if (res.ok) { toast('Límite actualizado correctamente', 'success'); cargarLimites(); }
+  else toast(d[campo]?.[0] || d.detail || 'Error al actualizar', 'error');
+}
+
+async function solicitarExclusion(tipo) {
+  const labels = { temporal_7:'7 días', temporal_30:'30 días', temporal_90:'90 días', indefinida:'indefinida' };
+  if (!confirm(`¿Confirmas la autoexclusión ${labels[tipo]}?\nEsta acción no se puede revertir antes del plazo.`)) return;
+  const res = await apiFetch('/api/usuarios/autoexclusion/', { method: 'POST', body: JSON.stringify({ tipo }) });
+  const d = await res.json();
+  if (res.ok) {
+    document.getElementById('excl-status').innerHTML = `
+      <div class="form-success">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>Autoexclusión ${labels[tipo]} activada.</span>
+      </div>`;
+    toast('Autoexclusión activada', 'success');
+    setTimeout(() => window.location.href = '/logout/', 2000);
+  } else toast(d.detail || d.tipo?.[0] || 'Error', 'error');
+}
+</script>
+{% endblock %}

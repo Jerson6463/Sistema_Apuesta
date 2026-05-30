@@ -1,0 +1,28 @@
+[run]
+source =
+    wallet
+    betting
+    users
+    audit
+
+omit =
+    */migrations/*
+    */tests/*
+    */tests.py
+    */admin.py
+    */apps.py
+    */views.py
+    */urls.py
+    */serializers.py
+    */consumers.py
+    */routing.py
+    */tasks.py
+    */management/*
+    */__init__.py
+    */test_*.py
+    */conftest.py
+    test_support.py
+
+[report]
+precision = 2
+show_missing = True

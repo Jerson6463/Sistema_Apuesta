@@ -1,0 +1,154 @@
+[
+  {
+    "model": "betting.evento",
+    "pk": 1,
+    "fields": {
+      "nombre": "Peru vs Brasil - Fase de Grupos Mundial 2026",
+      "deporte": "futbol",
+      "equipo_local": "Peru",
+      "equipo_visitante": "Brasil",
+      "fecha_inicio": "2026-06-15T20:00:00Z",
+      "estado": "programado",
+      "creado_en": "2026-05-01T00:00:00Z",
+      "actualizado_en": "2026-05-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "betting.evento",
+    "pk": 2,
+    "fields": {
+      "nombre": "Argentina vs Mexico - Fase de Grupos Mundial 2026",
+      "deporte": "futbol",
+      "equipo_local": "Argentina",
+      "equipo_visitante": "Mexico",
+      "fecha_inicio": "2026-06-16T18:00:00Z",
+      "estado": "programado",
+      "creado_en": "2026-05-01T00:00:00Z",
+      "actualizado_en": "2026-05-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "betting.evento",
+    "pk": 3,
+    "fields": {
+      "nombre": "Uruguay vs Colombia - Fase de Grupos Mundial 2026",
+      "deporte": "futbol",
+      "equipo_local": "Uruguay",
+      "equipo_visitante": "Colombia",
+      "fecha_inicio": "2026-06-17T22:00:00Z",
+      "estado": "programado",
+      "creado_en": "2026-05-01T00:00:00Z",
+      "actualizado_en": "2026-05-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "betting.mercado",
+    "pk": 1,
+    "fields": {
+      "evento": 1, "tipo": "1X2", "estado": "abierto",
+      "monto_minimo": "1.0000", "monto_maximo": "1000.0000", "margen_operador": "0.0500",
+      "creado_en": "2026-05-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "betting.mercado",
+    "pk": 2,
+    "fields": {
+      "evento": 1, "tipo": "over_under", "estado": "abierto",
+      "monto_minimo": "1.0000", "monto_maximo": "500.0000", "margen_operador": "0.0500",
+      "creado_en": "2026-05-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "betting.mercado",
+    "pk": 3,
+    "fields": {
+      "evento": 1, "tipo": "btts", "estado": "abierto",
+      "monto_minimo": "1.0000", "monto_maximo": "500.0000", "margen_operador": "0.0500",
+      "creado_en": "2026-05-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "betting.mercado",
+    "pk": 4,
+    "fields": {
+      "evento": 2, "tipo": "1X2", "estado": "abierto",
+      "monto_minimo": "1.0000", "monto_maximo": "1000.0000", "margen_operador": "0.0500",
+      "creado_en": "2026-05-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "betting.mercado",
+    "pk": 5,
+    "fields": {
+      "evento": 3, "tipo": "1X2", "estado": "abierto",
+      "monto_minimo": "1.0000", "monto_maximo": "1000.0000", "margen_operador": "0.0500",
+      "creado_en": "2026-05-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 1,
+    "fields": {"mercado": 1, "seleccion": "local", "valor": "3.5000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 2,
+    "fields": {"mercado": 1, "seleccion": "empate", "valor": "3.2000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 3,
+    "fields": {"mercado": 1, "seleccion": "visitante", "valor": "2.1000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 4,
+    "fields": {"mercado": 2, "seleccion": "over", "valor": "1.9000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 5,
+    "fields": {"mercado": 2, "seleccion": "under", "valor": "1.9500", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 6,
+    "fields": {"mercado": 3, "seleccion": "si", "valor": "2.1000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 7,
+    "fields": {"mercado": 3, "seleccion": "no", "valor": "1.7000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 8,
+    "fields": {"mercado": 4, "seleccion": "local", "valor": "1.5000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 9,
+    "fields": {"mercado": 4, "seleccion": "empate", "valor": "4.2000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 10,
+    "fields": {"mercado": 4, "seleccion": "visitante", "valor": "6.5000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 11,
+    "fields": {"mercado": 5, "seleccion": "local", "valor": "2.2000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 12,
+    "fields": {"mercado": 5, "seleccion": "empate", "valor": "3.1000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  },
+  {
+    "model": "betting.cuota",
+    "pk": 13,
+    "fields": {"mercado": 5, "seleccion": "visitante", "valor": "3.4000", "activa": true, "actualizado_en": "2026-05-01T00:00:00Z"}
+  }
+]

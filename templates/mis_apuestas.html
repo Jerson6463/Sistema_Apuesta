@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Mis Apuestas — FairBet Lab{% endblock %}
+{% block nav_apuestas %}active{% endblock %}
+
+{% block content %}
+<div class="page-inner">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px">
+    <div class="page-title"><i class="fa-solid fa-ticket"></i> Mis Apuestas</div>
+    <a href="{% url 'eventos' %}" class="btn btn-primary btn-sm">
+      <i class="fa-solid fa-plus"></i> Nueva apuesta
+    </a>
+  </div>
+  <p class="page-sub">Historial completo de todas tus apuestas</p>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-list"></i> Total</div>
+      <div class="value">{{ stats.total }}</div>
+    </div>
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-check"></i> Ganadas</div>
+      <div class="value c-green">{{ stats.ganadas }}</div>
+    </div>
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-xmark"></i> Perdidas</div>
+      <div class="value c-red">{{ stats.perdidas }}</div>
+    </div>
+    <div class="stat-box">
+      <div class="label"><i class="fa-regular fa-clock"></i> Pendientes</div>
+      <div class="value c-primary">{{ stats.pendientes }}</div>
+    </div>
+  </div>
+
+  <!-- FILTROS (links Django) -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+    <a href="{% url 'mis_apuestas' %}"
+       class="btn btn-ghost btn-sm {% if not estado_filtro %}active{% endif %}">
+      Todas
+    </a>
+    <a href="{% url 'mis_apuestas' %}?estado=aceptada"
+       class="btn btn-ghost btn-sm {% if estado_filtro == 'aceptada' %}active{% endif %}">
+      <i class="fa-regular fa-clock"></i> Pendientes
+    </a>
+    <a href="{% url 'mis_apuestas' %}?estado=ganada"
+       class="btn btn-ghost btn-sm {% if estado_filtro == 'ganada' %}active{% endif %}">
+      <i class="fa-solid fa-check"></i> Ganadas
+    </a>
+    <a href="{% url 'mis_apuestas' %}?estado=perdida"
+       class="btn btn-ghost btn-sm {% if estado_filtro == 'perdida' %}active{% endif %}">
+      <i class="fa-solid fa-xmark"></i> Perdidas
+    </a>
+    <a href="{% url 'mis_apuestas' %}?estado=anulada"
+       class="btn btn-ghost btn-sm {% if estado_filtro == 'anulada' %}active{% endif %}">
+      <i class="fa-solid fa-rotate-left"></i> Anuladas
+    </a>
+    <a href="{% url 'mis_apuestas' %}?estado=cash_out"
+       class="btn btn-ghost btn-sm {% if estado_filtro == 'cash_out' %}active{% endif %}">
+      <i class="fa-solid fa-sack-dollar"></i> Cash-out
+    </a>
+  </div>
+
+  <!-- TABLA (renderizada por Django) -->
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Evento</th>
+          <th>Selección</th>
+          <th>Mercado</th>
+          <th>Cuota</th>
+          <th>Monto</th>
+          <th>Potencial</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if apuestas %}
+          {% for a in apuestas %}
+          <tr>
+            <td style="max-width:180px">
+              <div style="font-weight:600;font-size:13px;line-height:1.4">
+                {% if a.tipo == 'combinada' %}<i class="fa-solid fa-layer-group" style="color:var(--primary);margin-right:4px"></i>{% endif %}
+                {{ a.evento }}
+              </div>
+            </td>
+            <td style="font-weight:700">{{ a.seleccion }}</td>
+            <td style="color:var(--text-2);font-size:13px">{{ a.mercado }}</td>
+            <td style="font-weight:700;color:var(--primary)">@ {{ a.cuota|floatformat:2 }}</td>
+            <td style="font-variant-numeric:tabular-nums">S/ {{ a.monto|floatformat:2 }}</td>
+            <td style="font-variant-numeric:tabular-nums;font-weight:600;
+                       color:{% if a.estado == 'ganada' %}var(--green){% else %}inherit{% endif %}">
+              S/ {{ a.potencial|floatformat:2 }}
+            </td>
+            <td>
+              {% if a.estado == 'aceptada' %}
+                <span class="badge badge-yellow"><i class="fa-regular fa-clock"></i> Pendiente</span>
+              {% elif a.estado == 'ganada' %}
+                <span class="badge badge-green"><i class="fa-solid fa-check"></i> Ganada</span>
+              {% elif a.estado == 'perdida' %}
+                <span class="badge badge-red"><i class="fa-solid fa-xmark"></i> Perdida</span>
+              {% elif a.estado == 'anulada' %}
+                <span class="badge badge-gray"><i class="fa-solid fa-rotate-left"></i> Anulada</span>
+              {% elif a.estado == 'cash_out' %}
+                <span class="badge badge-blue"><i class="fa-solid fa-sack-dollar"></i> Cash-out</span>
+              {% else %}
+                <span class="badge">{{ a.estado }}</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--text-3);font-size:12px;white-space:nowrap">
+              {{ a.creado_en|date:"d M, H:i" }}
+            </td>
+            <td>
+              {% if a.tipo == 'simple' and a.estado == 'aceptada' %}
+              <button class="btn btn-ghost btn-xs"
+                      onclick="abrirCO('{{ a.id }}', {{ a.monto }}, {{ a.cuota }}, '{{ a.seleccion|escapejs }}', '{{ a.evento|escapejs }}')">
+                <i class="fa-solid fa-sack-dollar"></i> Cash-out
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="9" style="text-align:center;padding:56px">
+              <i class="fa-solid fa-ticket" style="font-size:36px;color:var(--border-2);display:block;margin-bottom:12px"></i>
+              <div style="font-size:15px;font-weight:600;margin-bottom:8px;color:var(--text-2)">
+                No hay apuestas aún
+              </div>
+              <a href="{% url 'eventos' %}" class="btn btn-primary btn-sm">Ver eventos</a>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- MODAL CASH-OUT -->
+<div class="modal-bg" id="modal-co" style="display:none" onclick="if(event.target===this)cerrarCO()">
+  <div class="modal-box">
+    <h3><i class="fa-solid fa-sack-dollar" style="color:var(--primary)"></i> Cash-out anticipado</h3>
+    <p>Cierra tu apuesta ahora. Esta acción es <strong>irreversible</strong>.</p>
+    <div id="co-detalle" style="background:var(--bg-hover);border:1px solid var(--border);
+                                border-radius:var(--radius);padding:16px;font-size:14px;margin-bottom:4px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarCO()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-co" onclick="ejecutarCO()">
+        <i class="fa-solid fa-check"></i> Confirmar Cash-out
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let apuestaActiva = null;
+
+function abrirCO(id, monto, cuota, sel, evento) {
+  apuestaActiva = { id, monto: parseFloat(monto), cuota: parseFloat(cuota) };
+  const est = (parseFloat(monto) * 0.90).toFixed(2);
+  document.getElementById('co-detalle').innerHTML = `
+    <div style="display:grid;gap:8px">
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text-2)">Evento</span>
+        <span style="font-weight:600;text-align:right;max-width:260px">${evento}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text-2)">Selección</span>
+        <span style="font-weight:600">${sel}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text-2)">Apostado</span>
+        <span style="font-weight:700">S/ ${parseFloat(monto).toFixed(2)}</span>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <span style="color:var(--text-2)">Recibirás aprox.</span>
+        <span style="font-size:22px;font-weight:900;color:var(--primary)">S/ ${est}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-3)">
+        <i class="fa-solid fa-circle-info"></i> Factor casa 90% aplicado.
+      </div>
+    </div>`;
+  document.getElementById('modal-co').style.display = 'flex';
+}
+
+function cerrarCO() { document.getElementById('modal-co').style.display = 'none'; }
+
+async function ejecutarCO() {
+  if (!apuestaActiva) return;
+  const btn = document.getElementById('btn-co');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...';
+  try {
+    const res = await apiFetch('/api/apuestas/cash-out/', {
+      method: 'POST',
+      body: JSON.stringify({ apuesta_id: apuestaActiva.id, factor_casa: '0.9000' })
+    });
+    const d = await res.json();
+    if (res.ok) {
+      cerrarCO();
+      toast(`Cash-out exitoso. Recibiste: S/ ${parseFloat(d.monto_recibido).toFixed(2)}`, 'success');
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      toast(d.error || 'Error en cash-out', 'error');
+    }
+  } catch {
+    toast('Error de conexión', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar Cash-out';
+  }
+}
+</script>
+{% endblock %}

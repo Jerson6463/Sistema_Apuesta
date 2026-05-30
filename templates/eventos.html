@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Eventos — FairBet Lab{% endblock %}
+{% block nav_eventos %}active{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <!-- SIDEBAR IZQUIERDO -->
+  <aside class="sidebar-left">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Deportes</div>
+      <div class="sidebar-item {% if not estado_filtro %}active{% endif %}"
+           onclick="location.href='{% url 'eventos' %}'">
+        <i class="fa-solid fa-futbol"></i> Futbol
+        <span class="sidebar-count">{{ eventos|length }}</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Competiciones</div>
+      <div class="sidebar-item" onclick="location.href='{% url 'eventos' %}'">
+        <i class="fa-solid fa-earth-americas"></i> Mundial 2026
+        <span class="sidebar-count">{{ eventos|length }}</span>
+      </div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> Liga 1 Peru</div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> La Liga</div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> Premier League</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Filtrar</div>
+      <div class="sidebar-item {% if not estado_filtro %}active{% endif %}"
+           onclick="location.href='{% url 'eventos' %}'">
+        <i class="fa-solid fa-list"></i> Todos
+      </div>
+      <div class="sidebar-item {% if estado_filtro == 'en_vivo' %}active{% endif %}"
+           onclick="location.href='{% url 'eventos' %}?estado=en_vivo'">
+        <span class="live-dot"></span> En Vivo
+      </div>
+      <div class="sidebar-item {% if estado_filtro == 'programado' %}active{% endif %}"
+           onclick="location.href='{% url 'eventos' %}?estado=programado'">
+        <i class="fa-solid fa-clock"></i> Programados
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Juego Responsable</div>
+      <div class="sidebar-item" onclick="location.href='{% url 'wallet' %}'" style="color:var(--primary)">
+        <i class="fa-solid fa-shield-halved"></i> Mis límites
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO CENTRAL -->
+  <main class="main-content">
+    <div class="section-hdr">
+      <h2>
+        {% if estado_filtro == 'en_vivo' %}
+          <span class="live-dot"></span> En Vivo
+        {% else %}
+          <i class="fa-solid fa-futbol"></i> Eventos disponibles
+        {% endif %}
+      </h2>
+      <span style="color:var(--text-3);font-size:13px">{{ eventos|length }} evento(s)</span>
+    </div>
+
+    {% if eventos %}
+      {% for ev_data in eventos %}
+        {% include "partials/evento_card.html" %}
+      {% endfor %}
+    {% else %}
+      <div class="alert alert-info">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>No hay eventos disponibles con ese filtro.</span>
+      </div>
+    {% endif %}
+  </main>
+
+  <!-- BETSLIP -->
+  {% include "partials/betslip.html" %}
+
+</div>
+{% endblock %}

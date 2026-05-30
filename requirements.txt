@@ -1,0 +1,36 @@
+# Stack Core (Obligatorio)
+Django>=5.0,<5.1
+djangorestframework==3.15.1
+djangorestframework-simplejwt==5.3.1
+psycopg2-binary==2.9.9
+redis==5.0.4
+celery==5.4.0
+channels==4.1.0
+channels-redis==4.2.0
+daphne==4.1.2
+
+# Utilidades Financieras y Estado
+django-fsm==2.8.1
+
+# Rate limiting y seguridad
+django-ratelimit==4.1.0
+
+# Servir archivos estáticos en produccion
+whitenoise==6.7.0
+
+# Logging estructurado JSON (sin datos sensibles)
+python-json-logger==2.0.7
+
+# Fechas (validación KYC — edad exacta sin error de años bisiestos)
+python-dateutil==2.9.0.post0
+freezegun==1.5.1
+
+# Calidad de Código y Testing
+pytest==8.2.0
+pytest-django==4.8.0
+pytest-cov==5.0.0
+hypothesis==6.102.4
+factory-boy==3.3.0
+
+# Documentación OpenAPI
+drf-spectacular==0.27.2

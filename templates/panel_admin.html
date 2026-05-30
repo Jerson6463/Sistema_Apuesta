@@ -1,0 +1,533 @@
+{% extends "base.html" %}
+{% block title %}Panel Admin — FairBet Lab{% endblock %}
+{% block nav_admin %}active{% endblock %}
+
+{% block content %}
+<div style="max-width:1200px;margin:28px auto;padding:0 20px">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div>
+      <h1 style="font-size:22px;font-weight:800;margin:0">
+        <i class="fa-solid fa-gauge" style="color:var(--primary)"></i> Panel de Administración
+      </h1>
+      <p style="color:var(--text-3);margin:4px 0 0;font-size:13px">
+        {% if request.user.is_superuser %}Super Administrador{% else %}Operador / Staff{% endif %}
+      </p>
+    </div>
+    {% if request.user.is_superuser %}
+    <a href="/admin/" class="btn btn-ghost btn-sm">
+      <i class="fa-solid fa-screwdriver-wrench"></i> Django Admin
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px">
+    <div class="stat-card">
+      <div class="stat-val">{{ total_apuestas }}</div>
+      <div class="stat-lbl"><i class="fa-solid fa-ticket"></i> Apuestas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ total_usuarios }}</div>
+      <div class="stat-lbl"><i class="fa-solid fa-users"></i> Usuarios</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">S/ {{ volumen|floatformat:2 }}</div>
+      <div class="stat-lbl"><i class="fa-solid fa-coins"></i> Volumen</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ eventos_activos }}</div>
+      <div class="stat-lbl"><i class="fa-solid fa-futbol"></i> Eventos activos</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:22px">
+    <button class="tab-btn active" onclick="showTab('t-eventos')"><i class="fa-solid fa-futbol"></i> Eventos</button>
+    <button class="tab-btn" onclick="showTab('t-usuarios')"><i class="fa-solid fa-users"></i> Usuarios</button>
+    <button class="tab-btn" onclick="showTab('t-fraude')"><i class="fa-solid fa-shield-halved"></i> Fraude</button>
+    <button class="tab-btn" onclick="showTab('t-nuevo')"><i class="fa-solid fa-plus"></i> Nuevo Evento</button>
+  </div>
+
+  <!-- TAB EVENTOS -->
+  <div id="t-eventos" class="tab-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2 class="tab-title">Todos los eventos</h2>
+      <button class="btn btn-primary btn-sm" onclick="showTab('t-nuevo')">
+        <i class="fa-solid fa-plus"></i> Nuevo evento
+      </button>
+    </div>
+    <table class="admin-table">
+      <thead>
+        <tr><th>ID</th><th>Partido</th><th>Deporte</th><th>Fecha</th><th>Estado</th><th>Mercados</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for evento in eventos %}
+        <tr>
+          <td style="color:var(--text-3)">#{{ evento.id }}</td>
+          <td><strong>{{ evento.equipo_local }}</strong> vs <strong>{{ evento.equipo_visitante }}</strong></td>
+          <td>{{ evento.deporte }}</td>
+          <td>{{ evento.fecha_inicio|date:"d M Y, H:i" }}</td>
+          <td>
+            {% if evento.estado == 'programado' %}
+              <span class="badge badge-blue">Programado</span>
+            {% elif evento.estado == 'en_vivo' %}
+              <span class="badge badge-green">En Vivo</span>
+            {% elif evento.estado == 'finalizado' %}
+              <span class="badge badge-yellow">Finalizado</span>
+            {% else %}
+              <span class="badge badge-red">{{ evento.get_estado_display }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% for m in evento.mercados.all %}
+              <span class="badge" style="background:var(--bg-hover);color:var(--text-2);margin:1px">{{ m.tipo }}</span>
+            {% empty %}
+              <span style="color:var(--text-3);font-size:12px">Sin mercados</span>
+            {% endfor %}
+          </td>
+          <td>
+            <button class="icon-btn" title="Agregar mercado"
+                    onclick="abrirModalMercado({{ evento.id }}, '{{ evento.equipo_local|escapejs }} vs {{ evento.equipo_visitante|escapejs }}')">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align:center;padding:40px;color:var(--text-3)">
+            No hay eventos. <a href="#" onclick="showTab('t-nuevo');return false" style="color:var(--primary)">Crea el primero.</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TAB USUARIOS -->
+  <div id="t-usuarios" class="tab-panel" style="display:none">
+    <h2 class="tab-title" style="margin-bottom:14px">Usuarios registrados</h2>
+    <table class="admin-table">
+      <thead>
+        <tr><th>Usuario</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Registro</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr>
+          <td><strong>{{ u.username }}</strong></td>
+          <td>{{ u.first_name }} {{ u.last_name }}</td>
+          <td style="color:var(--text-3);font-size:12px">{{ u.email }}</td>
+          <td>
+            {% if u.is_superuser %}
+              <span class="badge badge-gold">Superadmin</span>
+            {% elif u.is_staff %}
+              <span class="badge badge-blue">Staff</span>
+            {% else %}
+              <span class="badge badge-green">Jugador</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.estado == 'verificado' %}
+              <span class="badge badge-green">Verificado</span>
+            {% elif u.estado == 'pendiente_verificacion' %}
+              <span class="badge badge-yellow">Pendiente</span>
+            {% elif u.estado == 'bloqueado' %}
+              <span class="badge badge-red">Bloqueado</span>
+            {% else %}
+              <span class="badge badge-red">{{ u.estado }}</span>
+            {% endif %}
+          </td>
+          <td style="color:var(--text-3);font-size:12px">{{ u.date_joined|date:"d M Y" }}</td>
+          <td>
+            <button class="icon-btn" title="Editar usuario"
+                    onclick="abrirModalUsuario({{ u.id }}, '{{ u.username|escapejs }}', '{{ u.first_name|escapejs }}', '{{ u.last_name|escapejs }}', '{{ u.email|escapejs }}', '{{ u.estado }}', {% if u.is_superuser %}'superadmin'{% elif u.is_staff %}'staff'{% else %}'jugador'{% endif %})">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-3)">Sin usuarios.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TAB FRAUDE -->
+  <div id="t-fraude" class="tab-panel" style="display:none">
+    <h2 class="tab-title" style="margin-bottom:14px">Alertas de fraude pendientes</h2>
+    {% if alertas %}
+    <table class="admin-table">
+      <thead><tr><th>Tipo</th><th>Descripción</th><th>Fecha</th></tr></thead>
+      <tbody>
+        {% for a in alertas %}
+        <tr>
+          <td><span class="badge badge-red">{{ a.tipo_alerta }}</span></td>
+          <td>{{ a.descripcion }}</td>
+          <td style="color:var(--text-3);font-size:12px">{{ a.id }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:50px;color:var(--text-3)">
+      <i class="fa-solid fa-shield-check" style="font-size:36px;display:block;margin-bottom:12px;color:#22c55e"></i>
+      Sin alertas pendientes
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- TAB NUEVO EVENTO -->
+  <div id="t-nuevo" class="tab-panel" style="display:none">
+    <div style="max-width:640px">
+      <h2 class="tab-title" style="margin-bottom:20px">
+        <i class="fa-solid fa-plus" style="color:var(--primary)"></i> Registrar nuevo evento
+      </h2>
+      <div id="form-msg" style="display:none;margin-bottom:14px"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="form-group">
+          <label class="form-label">Equipo local *</label>
+          <input id="f-local" type="text" class="form-control" placeholder="Ej: Peru"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Equipo visitante *</label>
+          <input id="f-visitante" type="text" class="form-control" placeholder="Ej: Brasil"/>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Nombre (opcional)</label>
+        <input id="f-nombre" type="text" class="form-control" placeholder="Se genera automáticamente"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+        <div class="form-group">
+          <label class="form-label">Deporte</label>
+          <select id="f-deporte" class="form-control">
+            <option value="futbol">Futbol</option>
+            <option value="basketball">Basketball</option>
+            <option value="tenis">Tenis</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha y hora *</label>
+          <input id="f-fecha" type="datetime-local" class="form-control"/>
+        </div>
+      </div>
+
+      <!-- Mercados -->
+      <div style="background:var(--bg-hover);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:14px">
+          <i class="fa-solid fa-chart-bar" style="color:var(--primary)"></i> Mercados a crear
+        </div>
+        <div class="mercado-bloque">
+          <label class="mercado-check">
+            <input type="checkbox" id="m-1x2" checked onchange="toggleMercado('cuotas-1x2',this.checked)"/>
+            <span><i class="fa-solid fa-trophy"></i> 1X2 — Resultado</span>
+          </label>
+          <div id="cuotas-1x2" class="cuotas-grid">
+            <div class="form-group"><label class="form-label">Local (1)</label><input type="number" id="c-1" class="form-control" value="2.00" step="0.01" min="1.01"/></div>
+            <div class="form-group"><label class="form-label">Empate (X)</label><input type="number" id="c-x" class="form-control" value="3.50" step="0.01" min="1.01"/></div>
+            <div class="form-group"><label class="form-label">Visitante (2)</label><input type="number" id="c-2" class="form-control" value="3.00" step="0.01" min="1.01"/></div>
+          </div>
+        </div>
+        <div class="mercado-bloque">
+          <label class="mercado-check">
+            <input type="checkbox" id="m-ou" onchange="toggleMercado('cuotas-ou',this.checked)"/>
+            <span><i class="fa-solid fa-arrows-up-down"></i> Over/Under 2.5</span>
+          </label>
+          <div id="cuotas-ou" class="cuotas-grid" style="display:none">
+            <div class="form-group"><label class="form-label">Más de 2.5</label><input type="number" id="c-over" class="form-control" value="1.90" step="0.01" min="1.01"/></div>
+            <div class="form-group"><label class="form-label">Menos de 2.5</label><input type="number" id="c-under" class="form-control" value="1.95" step="0.01" min="1.01"/></div>
+          </div>
+        </div>
+        <div class="mercado-bloque">
+          <label class="mercado-check">
+            <input type="checkbox" id="m-btts" onchange="toggleMercado('cuotas-btts',this.checked)"/>
+            <span><i class="fa-solid fa-arrows-left-right"></i> Ambos anotan (BTTS)</span>
+          </label>
+          <div id="cuotas-btts" class="cuotas-grid" style="display:none">
+            <div class="form-group"><label class="form-label">Sí anotan</label><input type="number" id="c-si" class="form-control" value="2.10" step="0.01" min="1.01"/></div>
+            <div class="form-group"><label class="form-label">No anotan</label><input type="number" id="c-no" class="form-control" value="1.70" step="0.01" min="1.01"/></div>
+          </div>
+        </div>
+        <div class="mercado-bloque">
+          <label class="mercado-check">
+            <input type="checkbox" id="m-hc" onchange="toggleMercado('cuotas-hc',this.checked)"/>
+            <span><i class="fa-solid fa-scale-balanced"></i> Hándicap asiático</span>
+          </label>
+          <div id="cuotas-hc" class="cuotas-grid" style="display:none">
+            <div class="form-group"><label class="form-label">Local −1</label><input type="number" id="c-hcl" class="form-control" value="1.85" step="0.01" min="1.01"/></div>
+            <div class="form-group"><label class="form-label">Visitante +1</label><input type="number" id="c-hcv" class="form-control" value="1.95" step="0.01" min="1.01"/></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-crear" onclick="crearEvento()">
+        <i class="fa-solid fa-check"></i> Registrar evento
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL EDITAR USUARIO -->
+<div id="modal-usuario" class="modal-bg" style="display:none" onclick="cerrarModal('modal-usuario')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <h3><i class="fa-solid fa-user-pen"></i> Editar usuario</h3>
+      <button onclick="cerrarModal('modal-usuario')" class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="modal-u-msg" style="display:none;margin-bottom:12px"></div>
+    <input type="hidden" id="u-id"/>
+    <div style="display:grid;gap:12px">
+      <div class="form-group">
+        <label class="form-label">Usuario</label>
+        <input id="u-username" type="text" class="form-control" disabled style="opacity:.6"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Nombre</label>
+          <input id="u-first" type="text" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellido</label>
+          <input id="u-last" type="text" class="form-control"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input id="u-email" type="email" class="form-control"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado de verificación</label>
+        <select id="u-estado" class="form-control">
+          <option value="verificado">Verificado</option>
+          <option value="pendiente_verificacion">Pendiente de verificación</option>
+          <option value="bloqueado">Bloqueado</option>
+          <option value="autoexcluido">Autoexcluido</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rol</label>
+        <select id="u-rol" class="form-control">
+          <option value="jugador">Jugador</option>
+          <option value="staff">Operador / Staff</option>
+          <option value="superadmin">Super Admin</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="guardarUsuario()"><i class="fa-solid fa-check"></i> Guardar</button>
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-usuario')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR MERCADO -->
+<div id="modal-mercado" class="modal-bg" style="display:none" onclick="cerrarModal('modal-mercado')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <h3><i class="fa-solid fa-chart-bar"></i> Agregar mercado</h3>
+      <button onclick="cerrarModal('modal-mercado')" class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="modal-m-msg" style="display:none;margin-bottom:12px"></div>
+    <input type="hidden" id="m-evento-id"/>
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">Evento</label>
+      <input id="m-evento-nombre" type="text" class="form-control" disabled style="opacity:.6"/>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">Tipo de mercado</label>
+      <select id="m-tipo" class="form-control" onchange="renderCuotasMercado()">
+        <option value="1X2">1X2 — Resultado</option>
+        <option value="over_under">Over/Under 2.5 goles</option>
+        <option value="btts">Ambos equipos anotan</option>
+        <option value="handicap">Hándicap asiático</option>
+        <option value="goleador">Goleador exacto</option>
+      </select>
+    </div>
+    <div id="m-cuotas-wrap"></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="guardarMercado()"><i class="fa-solid fa-plus"></i> Agregar</button>
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-mercado')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.tab-title{font-size:15px;font-weight:700;margin:0}
+.stat-card{background:var(--bg-nav);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center}
+.stat-card .stat-val{font-size:26px;font-weight:800;color:var(--primary)}
+.stat-card .stat-lbl{font-size:12px;color:var(--text-3);margin-top:4px}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text-3);cursor:pointer;transition:var(--transition);display:flex;align-items:center;gap:6px}
+.tab-btn.active,.tab-btn:hover{color:var(--primary);border-bottom-color:var(--primary)}
+.admin-table{width:100%;border-collapse:collapse;font-size:13px}
+.admin-table th{text-align:left;padding:9px 12px;background:var(--bg-hover);color:var(--text-2);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.admin-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text-1)}
+.admin-table tr:hover td{background:var(--bg-hover)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-green{background:rgba(34,197,94,.15);color:#22c55e}
+.badge-yellow{background:rgba(234,179,8,.15);color:#eab308}
+.badge-red{background:rgba(239,68,68,.15);color:#ef4444}
+.badge-blue{background:rgba(59,130,246,.15);color:#3b82f6}
+.badge-gold{background:rgba(245,158,11,.2);color:var(--primary)}
+.icon-btn{background:none;border:none;cursor:pointer;padding:5px 7px;border-radius:6px;transition:var(--transition);color:var(--text-3)}
+.icon-btn:hover{background:var(--bg-hover);color:var(--primary)}
+.mercado-bloque{border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px}
+.mercado-check{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-1)}
+.mercado-check input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary)}
+.cuotas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:var(--bg-nav);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-hdr h3{font-size:16px;font-weight:700;margin:0}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;padding:2px 6px;border-radius:6px}
+.modal-close:hover{color:var(--primary)}
+.alert-ok{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:var(--radius);font-size:13px;color:#22c55e}
+.alert-err{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius);font-size:13px;color:#ef4444}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).style.display = '';
+  const idx = ['t-eventos','t-usuarios','t-fraude','t-nuevo'].indexOf(id);
+  document.querySelectorAll('.tab-btn')[idx]?.classList.add('active');
+}
+
+function toggleMercado(id, show) {
+  document.getElementById(id).style.display = show ? 'grid' : 'none';
+}
+
+function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
+
+// ── Modal Usuario ─────────────────────────────────────────────────────────────
+function abrirModalUsuario(id, username, first, last, email, estado, rol) {
+  document.getElementById('u-id').value       = id;
+  document.getElementById('u-username').value = username;
+  document.getElementById('u-first').value    = first;
+  document.getElementById('u-last').value     = last;
+  document.getElementById('u-email').value    = email;
+  document.getElementById('u-estado').value   = estado;
+  document.getElementById('u-rol').value      = rol;
+  document.getElementById('modal-u-msg').style.display = 'none';
+  document.getElementById('modal-usuario').style.display = 'flex';
+}
+
+async function guardarUsuario() {
+  const id  = document.getElementById('u-id').value;
+  const rol = document.getElementById('u-rol').value;
+  const msgEl = document.getElementById('modal-u-msg');
+  const payload = {
+    estado:       document.getElementById('u-estado').value,
+    first_name:   document.getElementById('u-first').value,
+    last_name:    document.getElementById('u-last').value,
+    email:        document.getElementById('u-email').value,
+    is_superuser: rol === 'superadmin',
+    is_staff:     rol === 'staff' || rol === 'superadmin',
+  };
+  const res  = await apiFetch(`/api/admin/usuarios/${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
+  const data = await res?.json();
+  if (res?.ok) {
+    msgEl.innerHTML = `<div class="alert-ok"><i class="fa-solid fa-circle-check"></i> ${data.mensaje}</div>`;
+    msgEl.style.display = '';
+    setTimeout(() => { cerrarModal('modal-usuario'); location.reload(); }, 1200);
+  } else {
+    msgEl.innerHTML = `<div class="alert-err"><i class="fa-solid fa-circle-xmark"></i> ${data?.error || 'Error al guardar.'}</div>`;
+    msgEl.style.display = '';
+  }
+}
+
+// ── Modal Mercado ─────────────────────────────────────────────────────────────
+function abrirModalMercado(eventoId, eventoNombre) {
+  document.getElementById('m-evento-id').value     = eventoId;
+  document.getElementById('m-evento-nombre').value = eventoNombre;
+  document.getElementById('modal-m-msg').style.display = 'none';
+  renderCuotasMercado();
+  document.getElementById('modal-mercado').style.display = 'flex';
+}
+
+function renderCuotasMercado() {
+  const tipo = document.getElementById('m-tipo').value;
+  const campos = {
+    '1X2':       [{k:'cuota_local',l:'Local (1)',v:'2.00'},{k:'cuota_empate',l:'Empate (X)',v:'3.50'},{k:'cuota_visitante',l:'Visitante (2)',v:'3.00'}],
+    'over_under':[{k:'over',l:'Más de 2.5',v:'1.90'},{k:'under',l:'Menos de 2.5',v:'1.95'}],
+    'btts':      [{k:'si',l:'Sí anotan',v:'2.10'},{k:'no',l:'No anotan',v:'1.70'}],
+    'handicap':  [{k:'local',l:'Local −1',v:'1.85'},{k:'visitante',l:'Visitante +1',v:'1.95'}],
+    'goleador':  [{k:'local',l:'Local',v:'2.50'},{k:'visitante',l:'Visitante',v:'2.50'}],
+  };
+  document.getElementById('m-cuotas-wrap').innerHTML =
+    `<div style="display:grid;grid-template-columns:repeat(${campos[tipo].length},1fr);gap:10px;margin-bottom:4px">
+      ${campos[tipo].map(c => `<div class="form-group"><label class="form-label">${c.l}</label>
+        <input type="number" id="mc-${c.k}" class="form-control" value="${c.v}" step="0.01" min="1.01"/></div>`).join('')}
+    </div>`;
+}
+
+async function guardarMercado() {
+  const eventoId = document.getElementById('m-evento-id').value;
+  const tipo     = document.getElementById('m-tipo').value;
+  const msgEl    = document.getElementById('modal-m-msg');
+  const mapKeys  = { '1X2':['cuota_local','cuota_empate','cuota_visitante'], 'over_under':['over','under'],
+                     'btts':['si','no'], 'handicap':['local','visitante'], 'goleador':['local','visitante'] };
+  const cuotas   = {};
+  (mapKeys[tipo]||[]).forEach(k => {
+    const el = document.getElementById(`mc-${k}`);
+    if (el) cuotas[k] = parseFloat(el.value);
+  });
+  const res  = await apiFetch(`/api/eventos/${eventoId}/mercados/`, { method:'POST', body: JSON.stringify({ tipo, cuotas }) });
+  const data = await res?.json();
+  if (res?.ok) {
+    msgEl.innerHTML = `<div class="alert-ok"><i class="fa-solid fa-circle-check"></i> ${data.mensaje}</div>`;
+    msgEl.style.display = '';
+    setTimeout(() => { cerrarModal('modal-mercado'); location.reload(); }, 1200);
+  } else {
+    msgEl.innerHTML = `<div class="alert-err"><i class="fa-solid fa-circle-xmark"></i> ${data?.error || 'Error al agregar.'}</div>`;
+    msgEl.style.display = '';
+  }
+}
+
+// ── Crear evento ──────────────────────────────────────────────────────────────
+async function crearEvento() {
+  const local     = document.getElementById('f-local').value.trim();
+  const visitante = document.getElementById('f-visitante').value.trim();
+  const fecha     = document.getElementById('f-fecha').value;
+  const msgEl     = document.getElementById('form-msg');
+  if (!local || !visitante || !fecha) {
+    msgEl.innerHTML = '<div class="alert-err"><i class="fa-solid fa-triangle-exclamation"></i> Completa los campos obligatorios.</div>';
+    msgEl.style.display = ''; return;
+  }
+  const mercados = [];
+  if (document.getElementById('m-1x2').checked)  mercados.push({tipo:'1X2',       cuotas:{cuota_local:+document.getElementById('c-1').value,    cuota_empate:+document.getElementById('c-x').value,    cuota_visitante:+document.getElementById('c-2').value}});
+  if (document.getElementById('m-ou').checked)    mercados.push({tipo:'over_under', cuotas:{over:+document.getElementById('c-over').value,         under:+document.getElementById('c-under').value}});
+  if (document.getElementById('m-btts').checked)  mercados.push({tipo:'btts',       cuotas:{si:+document.getElementById('c-si').value,             no:+document.getElementById('c-no').value}});
+  if (document.getElementById('m-hc').checked)    mercados.push({tipo:'handicap',   cuotas:{local:+document.getElementById('c-hcl').value,         visitante:+document.getElementById('c-hcv').value}});
+  if (!mercados.length) {
+    msgEl.innerHTML = '<div class="alert-err"><i class="fa-solid fa-triangle-exclamation"></i> Selecciona al menos un mercado.</div>';
+    msgEl.style.display = ''; return;
+  }
+  const btn = document.getElementById('btn-crear');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Registrando...';
+  msgEl.style.display = 'none';
+  const res  = await apiFetch('/api/eventos/crear/', { method:'POST', body: JSON.stringify({
+    equipo_local: local, equipo_visitante: visitante,
+    nombre: document.getElementById('f-nombre').value.trim() || null,
+    deporte: document.getElementById('f-deporte').value,
+    fecha_inicio: fecha, mercados,
+  })});
+  const data = await res?.json();
+  btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Registrar evento';
+  if (res?.ok) {
+    msgEl.innerHTML = `<div class="alert-ok"><i class="fa-solid fa-circle-check"></i> Evento <strong>${data.nombre}</strong> creado con ${mercados.length} mercado(s).</div>`;
+    msgEl.style.display = '';
+    ['f-local','f-visitante','f-nombre','f-fecha'].forEach(id => document.getElementById(id).value = '');
+    setTimeout(() => { showTab('t-eventos'); location.reload(); }, 1500);
+  } else {
+    msgEl.innerHTML = `<div class="alert-err"><i class="fa-solid fa-circle-xmark"></i> ${data?.error || 'Error al crear.'}</div>`;
+    msgEl.style.display = '';
+  }
+}
+</script>
+{% endblock %}

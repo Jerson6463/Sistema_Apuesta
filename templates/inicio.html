@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}FairBet Lab — Apuestas Deportivas{% endblock %}
+{% block nav_inicio %}active{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div class="hero-tag"><i class="fa-solid fa-trophy"></i> Mundial 2026 &mdash; Cuotas en tiempo real</div>
+  <h1>Las mejores cuotas<br/>del <span>Mundial 2026</span></h1>
+  <p>Apuesta con fichas virtuales en los partidos más importantes. Simple, combinada y en vivo.</p>
+  <div class="hero-btns">
+    <a href="{% url 'eventos' %}" class="btn btn-primary">
+      <i class="fa-solid fa-futbol"></i> Ver todos los eventos
+    </a>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- SIDEBAR IZQUIERDO -->
+  <aside class="sidebar-left">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Deportes</div>
+      <div class="sidebar-item active" onclick="location.href='{% url 'eventos' %}'">
+        <i class="fa-solid fa-futbol"></i> Futbol
+        <span class="sidebar-count">{{ eventos|length }}</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Competiciones</div>
+      <div class="sidebar-item" onclick="location.href='{% url 'eventos' %}'">
+        <i class="fa-solid fa-earth-americas"></i> Mundial 2026
+        <span class="sidebar-count">{{ eventos|length }}</span>
+      </div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> Liga 1 Peru</div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> La Liga</div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> Premier League</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Juego Responsable</div>
+      <div class="sidebar-item" onclick="location.href='{% url 'wallet' %}#limites'" style="color:var(--primary)">
+        <i class="fa-solid fa-shield-halved"></i> Mis límites
+      </div>
+      <div class="sidebar-item" onclick="location.href='{% url 'wallet' %}#exclusion'" style="color:var(--red-lt)">
+        <i class="fa-solid fa-ban"></i> Autoexclusión
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO CENTRAL -->
+  <main class="main-content">
+    <div class="section-hdr">
+      <h2><i class="fa-solid fa-fire"></i> Eventos destacados</h2>
+      <a href="{% url 'eventos' %}" class="mas-mercados">
+        Ver todos <i class="fa-solid fa-chevron-right"></i>
+      </a>
+    </div>
+
+    {% if eventos %}
+      {% for ev_data in eventos %}
+      {% include "partials/evento_card.html" %}
+      {% endfor %}
+    {% else %}
+      <div class="alert alert-info">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>No hay eventos disponibles en este momento.</span>
+      </div>
+    {% endif %}
+  </main>
+
+  <!-- BETSLIP -->
+  {% include "partials/betslip.html" %}
+
+</div>
+{% endblock %}

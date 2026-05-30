@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Registro — FairBet Lab{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-box" style="max-width:500px">
+
+    <div class="auth-logo">
+      <i class="fa-solid fa-dice"></i> FairBet Lab
+    </div>
+
+    <h2>Crear Cuenta</h2>
+    <p class="subtitle">Regístrate gratis y empieza a apostar con fichas virtuales</p>
+
+    {% if errores %}
+    <div class="form-error" style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+      <div style="display:flex;align-items:center;gap:8px;font-weight:700">
+        <i class="fa-solid fa-circle-xmark"></i> Corrige los siguientes errores:
+      </div>
+      {% for campo, msgs in errores.items %}
+        {% for msg in msgs %}
+          <div style="font-size:13px;padding-left:20px">• {{ campo }}: {{ msg }}</div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'registro' %}">
+      {% csrf_token %}
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre</label>
+          <input name="first_name" type="text" class="form-control" placeholder="Tu nombre"
+                 value="{{ request.POST.first_name }}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellido</label>
+          <input name="last_name" type="text" class="form-control" placeholder="Tu apellido"
+                 value="{{ request.POST.last_name }}"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><i class="fa-solid fa-user"></i> Usuario</label>
+        <input name="username" type="text" class="form-control" placeholder="Nombre de usuario único"
+               value="{{ request.POST.username }}" required/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><i class="fa-solid fa-envelope"></i> Correo electrónico</label>
+        <input name="email" type="email" class="form-control" placeholder="correo@ejemplo.com"
+               value="{{ request.POST.email }}" required/>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-id-card"></i> Número de DNI</label>
+          <input name="dni" type="text" class="form-control" placeholder="12345678" maxlength="8"
+                 inputmode="numeric" pattern="[0-9]{8}"
+                 value="{{ request.POST.dni }}" required/>
+          <div class="form-hint"><i class="fa-solid fa-circle-info"></i> Los 8 dígitos de tu documento</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-hashtag"></i> Dígito verificador</label>
+          <input name="digito_verificador" type="text" class="form-control" placeholder="1 o D"
+                 maxlength="1" style="text-transform:uppercase"
+                 value="{{ request.POST.digito_verificador }}" required/>
+          <div class="form-hint"><i class="fa-solid fa-circle-info"></i> Impreso en la esquina del DNI (0-9 o letra)</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><i class="fa-solid fa-calendar"></i> Fecha de nacimiento</label>
+        <input name="fecha_nacimiento" type="date" class="form-control"
+               value="{{ request.POST.fecha_nacimiento }}" required/>
+        <div class="form-hint"><i class="fa-solid fa-circle-info"></i> Debes ser mayor de 18 años</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-lock"></i> Contraseña</label>
+          <input name="password" type="password" class="form-control" placeholder="Mínimo 8 caracteres" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-lock"></i> Confirmar</label>
+          <input name="password2" type="password" class="form-control" placeholder="Repetir contraseña" required/>
+        </div>
+      </div>
+
+      <div class="alert alert-warning" style="margin-bottom:14px">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>El sistema valida tu edad con el DNI. Solo mayores de 18 años pueden registrarse.</span>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full">
+        <i class="fa-solid fa-user-plus"></i> Crear cuenta gratis
+      </button>
+    </form>
+
+    <div class="alert alert-warning" style="margin-top:14px">
+      <i class="fa-solid fa-hourglass-half"></i>
+      <span>Tras registrarte, tu cuenta quedará <strong>pendiente de verificación KYC</strong>.
+      Un operador debe aprobarla antes de que puedas iniciar sesión.</span>
+    </div>
+
+    <div class="form-footer">
+      ¿Ya tienes cuenta? <a href="{% url 'login' %}">Iniciar sesión</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+# Variables de entorno
+.env
+
+# Archivos estáticos compilados (generados por collectstatic / WhiteNoise)
+staticfiles/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Docker
+*.override.yml
