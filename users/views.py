@@ -1,3 +1,5 @@
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,8 +13,9 @@ from users.serializers import (
 )
 
 
+@method_decorator(ratelimit(key="ip", rate="5/m", method="POST", block=True), name="post")
 class RegistroView(generics.CreateAPIView):
-    """POST /api/usuarios/registro/ — Registro público."""
+    """POST /api/usuarios/registro/ — Registro público. Rate limit: 5/min por IP."""
     queryset = Usuario.objects.all()
     serializer_class = RegistroUsuarioSerializer
     permission_classes = [permissions.AllowAny]
