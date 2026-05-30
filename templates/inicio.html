@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FairBet Lab — Sistema de Apuestas</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #4f46e5;
+      box-shadow: 0 4px 20px rgba(79,70,229,0.3);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      font-size: 40px;
+    }
+
+    .logo-text h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span {
+      font-size: 13px;
+      color: #a5b4fc;
+      font-weight: 400;
+    }
+
+    .badge {
+      background: #4f46e5;
+      color: #fff;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* AVISO LEGAL */
+    .aviso-legal {
+      background: #1e293b;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 40px;
+      font-size: 13px;
+      color: #fcd34d;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 60px 40px 40px;
+    }
+
+    .hero h2 {
+      font-size: 42px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 14px;
+    }
+
+    .hero p {
+      color: #94a3b8;
+      font-size: 17px;
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 13px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform .15s, box-shadow .15s;
+      display: inline-block;
+    }
+
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #a5b4fc;
+      border: 1px solid #4f46e5;
+    }
+
+    /* STATS */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      padding: 0 40px 50px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 24px 36px;
+      text-align: center;
+      min-width: 160px;
+    }
+
+    .stat-card .num {
+      font-size: 36px;
+      font-weight: 900;
+      color: #818cf8;
+    }
+
+    .stat-card .label {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    /* ENDPOINTS */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 40px 60px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #c084fc;
+      margin-bottom: 20px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .endpoints-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+      margin-bottom: 40px;
+    }
+
+    .endpoint-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color .2s, background .2s;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .endpoint-card:hover {
+      border-color: #4f46e5;
+      background: #1e2a45;
+    }
+
+    .method {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+      min-width: 48px;
+      text-align: center;
+    }
+
+    .get  { background: #14532d; color: #4ade80; }
+    .post { background: #1e3a5f; color: #60a5fa; }
+    .ws   { background: #3b1f6e; color: #c084fc; }
+
+    .ep-info .path {
+      font-size: 13px;
+      font-family: 'Consolas', monospace;
+      color: #e2e8f0;
+    }
+
+    .ep-info .desc {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* FOOTER */
+    footer {
+      background: #0a0a14;
+      border-top: 1px solid #1e293b;
+      padding: 24px 40px;
+      text-align: center;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    footer span { color: #4f46e5; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🎰</div>
+    <div class="logo-text">
+      <h1>FairBet Lab</h1>
+      <span>Simulador de apuestas deportivas con moneda virtual</span>
+    </div>
+  </div>
+  <div class="badge">v1.0.0 · Django 5 · DRF</div>
+</header>
+
+<div class="aviso-legal">
+  ⚠️ Plataforma educativa con moneda virtual. No constituye una casa de apuestas.
+</div>
+
+<div class="hero">
+  <h2>Sistema de Apuestas</h2>
+  <p>Plataforma con wallet de partida doble, apuestas en tiempo real, auditoría inmutable SHA-256 y controles de juego responsable.</p>
+  <div class="hero-btns">
+    <a href="/admin/" class="btn btn-primary">🔧 Panel Admin</a>
+    <a href="/api/eventos/" class="btn btn-secondary">⚽ Ver Eventos</a>
+    <a href="/api/usuarios/login/" class="btn btn-secondary">🔑 Login API</a>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="num">38</div>
+    <div class="label">Commits</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">4</div>
+    <div class="label">Apps Django</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">21</div>
+    <div class="label">Endpoints</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">10</div>
+    <div class="label">ADRs</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">SHA256</div>
+    <div class="label">Auditoría</div>
+  </div>
+</div>
+
+<div class="section">
+
+  <div class="section-title">👤 Usuarios y Autenticación</div>
+  <div class="endpoints-grid">
+    <a href="/api/usuarios/registro/" class="endpoint-card">
+      <span class="method post">POST</span>
+      <div class="ep-info"><div class="path">/api/usuarios/registro/</div><div class="desc">Registro con DNI peruano y mayoría de edad</div></div>
+    </a>
+    <a href="/api/usuarios/login/" class="endpoint-card">
+      <span class="method post">POST</span>
+      <div class="ep-info"><div class="path">/api/usuarios/login/</div><div class="desc">Obtener JWT (access + refresh)</div></div>
+    </a>
+    <a href="/api/usuarios/perfil/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/usuarios/perfil/</div><div class="desc">Perfil del usuario autenticado + saldo</div></div>
+    </a>
+    <a href="/api/usuarios/limites/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/usuarios/limites/</div><div class="desc">Límites diario/semanal/mensual (cooldown 24h)</div></div>
+    </a>
+    <a href="/api/usuarios/autoexclusion/" class="endpoint-card">
+      <span class="method post">POST</span>
+      <div class="ep-info"><div class="path">/api/usuarios/autoexclusion/</div><div class="desc">Solicitar autoexclusión (bloqueante)</div></div>
+    </a>
+  </div>
+
+  <div class="section-title">💰 Wallet con Partida Doble</div>
+  <div class="endpoints-grid">
+    <a href="/api/wallet/saldo/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/wallet/saldo/</div><div class="desc">Saldo disponible y bloqueado (calculado)</div></div>
+    </a>
+    <a href="/api/wallet/recargar/" class="endpoint-card">
+      <span class="method post">POST</span>
+      <div class="ep-info"><div class="path">/api/wallet/recargar/</div><div class="desc">Recargar fichas virtuales</div></div>
+    </a>
+    <a href="/api/wallet/retirar/" class="endpoint-card">
+      <span class="method post">POST</span>
+      <div class="ep-info"><div class="path">/api/wallet/retirar/</div><div class="desc">Retirar fichas virtuales</div></div>
+    </a>
+    <a href="/api/wallet/historial/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/wallet/historial/</div><div class="desc">Últimos 50 movimientos del wallet</div></div>
+    </a>
+    <a href="/api/wallet/resumen/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/wallet/resumen/</div><div class="desc">Resumen mensual de movimientos</div></div>
+    </a>
+  </div>
+
+  <div class="section-title">⚽ Eventos y Apuestas</div>
+  <div class="endpoints-grid">
+    <a href="/api/eventos/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/eventos/</div><div class="desc">Lista de eventos del Mundial 2026</div></div>
+    </a>
+    <a href="/api/eventos/1/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/eventos/&lt;id&gt;/</div><div class="desc">Detalle con mercados y cuotas</div></div>
+    </a>
+    <a href="/api/apuestas/" class="endpoint-card">
+      <span class="method post">POST</span>
+      <div class="ep-info"><div class="path">/api/apuestas/</div><div class="desc">Crear apuesta simple</div></div>
+    </a>
+    <a href="/api/apuestas/in-play/" class="endpoint-card">
+      <span class="method post">POST</span>
+      <div class="ep-info"><div class="path">/api/apuestas/in-play/</div><div class="desc">Apuesta con evento EN VIVO</div></div>
+    </a>
+    <a href="/api/apuestas/combinada/" class="endpoint-card">
+      <span class="method post">POST</span>
+      <div class="ep-info"><div class="path">/api/apuestas/combinada/</div><div class="desc">Apuesta acumuladora</div></div>
+    </a>
+    <a href="/api/apuestas/cash-out/" class="endpoint-card">
+      <span class="method post">POST</span>
+      <div class="ep-info"><div class="path">/api/apuestas/cash-out/</div><div class="desc">Cerrar apuesta anticipadamente</div></div>
+    </a>
+    <a href="/api/apuestas/mis-apuestas/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/apuestas/mis-apuestas/</div><div class="desc">Historial de apuestas del usuario</div></div>
+    </a>
+    <div class="endpoint-card">
+      <span class="method ws">WS</span>
+      <div class="ep-info"><div class="path">/ws/eventos/&lt;id&gt;/cuotas/</div><div class="desc">Cuotas en tiempo real (WebSocket)</div></div>
+    </div>
+  </div>
+
+  <div class="section-title">🛡️ Dashboard Operador (solo admin)</div>
+  <div class="endpoints-grid">
+    <a href="/api/admin/dashboard/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/admin/dashboard/</div><div class="desc">GGR, exposure, usuarios activos</div></div>
+    </a>
+    <a href="/api/admin/auditoria/verificar/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/admin/auditoria/verificar/</div><div class="desc">Verificar integridad cadena SHA-256</div></div>
+    </a>
+    <a href="/api/admin/reporte-mincetur/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/admin/reporte-mincetur/</div><div class="desc">Exportar CSV DS 005-2023-MINCETUR</div></div>
+    </a>
+    <a href="/api/admin/fraude/alertas/" class="endpoint-card">
+      <span class="method get">GET</span>
+      <div class="ep-info"><div class="path">/api/admin/fraude/alertas/</div><div class="desc">Alertas anti-fraude pendientes</div></div>
+    </a>
+  </div>
+
+</div>
+
+<footer>
+  <p>FairBet Lab &copy; 2026 — Desarrollado por <span>KellyCubas</span> · Stack: Django 5 · DRF · PostgreSQL · Redis · Celery · Django Channels</p>
+  <p style="margin-top:8px; color: #f59e0b;">⚠️ Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</p>
+</footer>
+
+</body>
+</html>
