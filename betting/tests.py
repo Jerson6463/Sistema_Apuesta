@@ -352,3 +352,50 @@ class ApuestaCombinada_Test(TestCase):
         )
         cuota_esperada = self.cuota_local.valor * cuota2.valor
         self.assertEqual(combinada.cuota_total, cuota_esperada)
+
+
+class CashOutTest(TestCase):
+    """Tests del cash-out: fórmula exacta y validación de estado."""
+
+    def setUp(self):
+        self.usuario = crear_usuario_verificado("kelly_cashout")
+        recargar_fichas(self.usuario, Decimal("500.0000"), id_transaccion=uuid.uuid4())
+        self.evento = crear_evento_programado()
+        self.mercado, self.cuota = crear_mercado_y_cuotas(self.evento)
+        self.apuesta = crear_apuesta(
+            usuario=self.usuario,
+            cuota=self.cuota,
+            monto=Decimal("100.0000"),
+            clave_idempotencia=uuid.uuid4(),
+        )
+
+    def test_formula_cash_out_correcta(self):
+        from betting.services import hacer_cash_out
+        from wallet.services import obtener_saldo
+
+        odds_original = self.apuesta.cuota_al_apostar
+        odds_actual = self.cuota.valor  # mismo valor (no cambió en el test)
+        factor = Decimal("0.9000")
+        monto_esperado = (
+            Decimal("100.0000") * odds_original / odds_actual * factor
+        ).quantize(Decimal("0.0001"))
+
+        monto_recibido = hacer_cash_out(self.apuesta, factor_casa=factor)
+        self.assertEqual(monto_recibido, monto_esperado)
+
+    def test_cash_out_cambia_estado_a_cash_out(self):
+        from betting.services import hacer_cash_out
+        from betting.models import EstadoApuesta
+        hacer_cash_out(self.apuesta, factor_casa=Decimal("0.9000"))
+        self.apuesta.refresh_from_db()
+        self.assertEqual(self.apuesta.estado, EstadoApuesta.CASH_OUT)
+
+    def test_cash_out_sobre_apuesta_liquidada_lanza_error(self):
+        from betting.services import hacer_cash_out
+        from betting.exceptions import CashOutNoDisponibleError
+        self.evento.iniciar()
+        self.evento.finalizar()
+        from betting.services import liquidar_apuesta
+        liquidar_apuesta(self.apuesta, resultado_ganador="local")
+        with self.assertRaises(CashOutNoDisponibleError):
+            hacer_cash_out(self.apuesta)
