@@ -13,6 +13,7 @@ from betting.views import (
     EventoListView,
     ListarUsuariosView,
     MisApuestasView,
+    VerificarCombinadasView,
 )
 
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
     path("apuestas/mis-apuestas/", MisApuestasView.as_view(), name="api_mis_apuestas"),
     path("apuestas/cash-out/", CashOutView.as_view(), name="cash_out"),
     path("apuestas/combinada/", CrearApuestaCombinada_View.as_view(), name="apuesta_combinada"),
+    path("apuestas/verificar-combinadas/", VerificarCombinadasView.as_view(), name="verificar_combinadas"),
     path("eventos/<int:evento_id>/cuotas/<int:cuota_id>/", ActualizarCuotaView.as_view(), name="actualizar_cuota"),
     path("admin/usuarios/", ListarUsuariosView.as_view(), name="listar_usuarios"),
     path("admin/usuarios/<int:pk>/", EditarUsuarioAdminView.as_view(), name="editar_usuario_admin"),

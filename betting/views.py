@@ -404,6 +404,32 @@ class EditarUsuarioAdminView(APIView):
         })
 
 
+class VerificarCombinadasView(APIView):
+    """
+    GET /api/apuestas/verificar-combinadas/ — Debug: muestra combinadas del usuario.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from betting.models import ApuestaCombinada
+        qs = ApuestaCombinada.objects.filter(usuario=request.user)
+        results = []
+        for c in qs:
+            sel_count = c.selecciones.count()
+            results.append({
+                "id": str(c.id),
+                "monto": str(c.monto_apostado),
+                "cuota_total": str(c.cuota_total),
+                "estado": c.estado,
+                "creado_en": str(c.creado_en),
+                "num_selecciones": sel_count,
+            })
+        return Response({
+            "total_combinadas": len(results),
+            "combinadas": results,
+        })
+
+
 class CrearApuestaCombinada_View(APIView):
     """
     POST /api/apuestas/combinada/ — Crea una apuesta acumuladora.

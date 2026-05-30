@@ -1,5 +1,5 @@
 class EventoNoDisponibleError(Exception):
-    """El evento no está en estado que permita apuestas simples (debe ser PROGRAMADO)."""
+    """El evento no está en estado que permita apuestas (debe ser PROGRAMADO o EN VIVO)."""
 
 
 class UsuarioNoHabilitadoError(Exception):

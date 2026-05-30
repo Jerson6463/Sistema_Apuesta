@@ -244,26 +244,64 @@ def mis_apuestas_page(request):
     if request.user.is_staff:
         return redirect('panel_admin')
 
-    from betting.models import Apuesta
+    from betting.models import Apuesta, ApuestaCombinada, Cuota
 
     estado_filtro = request.GET.get('estado', '')
-    qs = Apuesta.objects.filter(usuario=request.user).select_related(
-        'cuota__mercado__evento'
-    ).order_by('-creado_en')
+
+    apuestas_simples = Apuesta.objects.filter(
+        usuario=request.user
+    ).select_related('cuota__mercado__evento')
+
+    todas = []
+    for a in apuestas_simples:
+        todas.append({
+            'tipo': 'simple',
+            'id': str(a.id),
+            'evento': a.cuota.mercado.evento.nombre,
+            'seleccion': a.cuota.seleccion,
+            'mercado': a.cuota.mercado.get_tipo_display(),
+            'cuota': a.cuota_al_apostar,
+            'monto': a.monto_apostado,
+            'potencial': a.pago_potencial,
+            'estado': a.estado,
+            'creado_en': a.creado_en,
+        })
+
+    try:
+        for c in ApuestaCombinada.objects.filter(usuario=request.user):
+            ids_sel = [s.id for s in c.selecciones.all()]
+            qs_cuotas = Cuota.objects.filter(id__in=ids_sel).select_related('mercado__evento')
+            sels = list(qs_cuotas)
+            nombres = list(dict.fromkeys(s.mercado.evento.nombre for s in sels))
+            todas.append({
+                'tipo': 'combinada',
+                'id': str(c.id),
+                'evento': ' + '.join(nombres) or f'Combinada {str(c.id)[:8]}',
+                'seleccion': ' + '.join(s.seleccion for s in sels),
+                'mercado': f'Combinada ({len(sels)} sel.)',
+                'cuota': c.cuota_total,
+                'monto': c.monto_apostado,
+                'potencial': c.pago_potencial,
+                'estado': c.estado,
+                'creado_en': c.creado_en,
+            })
+    except Exception as e:
+        print(f"ERROR cargando combinadas: {e}")
 
     if estado_filtro:
-        qs = qs.filter(estado=estado_filtro)
+        todas = [a for a in todas if a['estado'] == estado_filtro]
 
-    todas = Apuesta.objects.filter(usuario=request.user)
+    todas.sort(key=lambda x: x['creado_en'], reverse=True)
+
     stats = {
-        'total':      todas.count(),
-        'ganadas':    todas.filter(estado='ganada').count(),
-        'perdidas':   todas.filter(estado='perdida').count(),
-        'pendientes': todas.filter(estado='aceptada').count(),
+        'total':      len(todas),
+        'ganadas':    sum(1 for a in todas if a['estado'] == 'ganada'),
+        'perdidas':   sum(1 for a in todas if a['estado'] == 'perdida'),
+        'pendientes': sum(1 for a in todas if a['estado'] == 'aceptada'),
     }
 
     return render(request, 'mis_apuestas.html', {
-        'apuestas':      qs,
+        'apuestas':      todas,
         'stats':         stats,
         'estado_filtro': estado_filtro,
     })

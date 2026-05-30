@@ -47,17 +47,23 @@ def _validar_usuario(usuario):
 
 
 def _validar_mercado(mercado):
+    if mercado.estado == EstadoMercado.SUSPENDIDO:
+        raise MercadoCerradoError(
+            f"El mercado '{mercado.get_tipo_display()}' está suspendido temporalmente. "
+            f"Intente en unos segundos."
+        )
     if mercado.estado != EstadoMercado.ABIERTO:
         raise MercadoCerradoError(
-            f"El mercado '{mercado.get_tipo_display()}' no está abierto."
+            f"El mercado '{mercado.get_tipo_display()}' no está abierto "
+            f"(estado: {mercado.estado})."
         )
 
 
 def _validar_evento_simple(evento):
-    if evento.estado != EstadoEvento.PROGRAMADO:
+    if evento.estado not in (EstadoEvento.PROGRAMADO, EstadoEvento.EN_VIVO):
         raise EventoNoDisponibleError(
-            f"El evento '{evento.nombre}' no acepta apuestas simples "
-            f"(estado: {evento.estado}). Debe estar PROGRAMADO."
+            f"El evento '{evento.nombre}' no acepta apuestas "
+            f"(estado: {evento.estado}). Debe estar PROGRAMADO o EN VIVO."
         )
 
 
