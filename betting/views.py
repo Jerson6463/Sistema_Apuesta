@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -51,10 +53,11 @@ class EventoDetalleView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
+@method_decorator(ratelimit(key="user", rate="10/m", method="POST", block=True), name="post")
 class CrearApuestaView(APIView):
     """
     POST /api/apuestas/ — Crea una apuesta simple.
-    Requiere: cuota_id, monto, (opcional) clave_idempotencia.
+    Rate limit: 10 apuestas/min por usuario (control de juego responsable).
     Mensaje de consumo responsable siempre presente en la respuesta.
     """
     permission_classes = [permissions.IsAuthenticated]
