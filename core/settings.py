@@ -149,7 +149,8 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# CompressedStaticFilesStorage sirve archivos comprimidos sin renombrar con hash
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 # ── Templates ─────────────────────────────────────────────────────────────────
 TEMPLATES[0]["DIRS"] = [BASE_DIR / "templates"]
