@@ -1,338 +1,186 @@
 {% extends "base.html" %}
 {% load static %}
-
-{% block title %}FairBet Lab — Inicio{% endblock %}
+{% block title %}FairBet Lab — Apuestas Deportivas{% endblock %}
 {% block nav_inicio %}active{% endblock %}
 
 {% block content %}
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-badge">
-    <span>⚽</span> Mundial 2026 · Apuestas con fichas virtuales
-  </div>
-  <h1>Sistema de<br/>Apuestas FairBet</h1>
-  <p>Plataforma educativa con wallet de partida doble, apuestas en tiempo real, auditoría SHA-256 y controles de juego responsable.</p>
-  <div class="hero-btns">
-    <a href="/admin/" class="btn btn-primary">🔧 Panel Admin</a>
-    <a href="/api/eventos/" class="btn btn-outline">⚽ Ver Eventos (API)</a>
-    <a href="#endpoints" class="btn btn-outline">📋 Ver Endpoints</a>
-  </div>
-</section>
-
-<!-- STATS -->
-<div class="stats-row">
-  <div class="stat-card">
-    <div class="num">38</div>
-    <div class="label">Commits</div>
-  </div>
-  <div class="stat-card">
-    <div class="num">4</div>
-    <div class="label">Apps Django</div>
-  </div>
-  <div class="stat-card">
-    <div class="num">21</div>
-    <div class="label">Endpoints API</div>
-  </div>
-  <div class="stat-card">
-    <div class="num">10</div>
-    <div class="label">ADRs</div>
-  </div>
-  <div class="stat-card">
-    <div class="num">80</div>
-    <div class="label">% Cobertura mín.</div>
+<!-- BANNER PRINCIPAL -->
+<div class="hero-banner">
+  <div class="hero-badge">🏆 Mundial 2026 · Cuotas en vivo</div>
+  <h1>Apuesta en los<br/><span>mejores partidos</span><br/>del mundo</h1>
+  <p>Plataforma educativa con fichas virtuales. Las mejores cuotas del Mundial 2026, apuestas simples, combinadas y en vivo.</p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <a href="/eventos/" class="btn btn-primary">⚽ Ver todos los eventos</a>
+    <a href="/registro/" class="btn btn-outline">Crear cuenta gratis</a>
   </div>
 </div>
 
-<!-- CARACTERÍSTICAS -->
-<div class="section">
-  <div class="section-header">
-    <span class="section-icon">✨</span>
-    <h2 class="section-title">Funcionalidades implementadas</h2>
-  </div>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="f-icon">💰</div>
-      <h3>Wallet Partida Doble</h3>
-      <p>Toda operación genera dos entradas balanceadas. El saldo nunca se almacena — siempre se calcula con SUM(créditos) − SUM(débitos).</p>
-      <span class="f-tag">4 pts rúbrica</span>
-    </div>
-    <div class="feature-card">
-      <div class="f-icon">🔄</div>
-      <h3>Máquina de Estados</h3>
-      <p>Apuestas y Eventos con django-fsm. Transiciones protegidas: programado → en_vivo → finalizado / suspendido / anulado.</p>
-      <span class="f-tag">3 pts rúbrica</span>
-    </div>
-    <div class="feature-card">
-      <div class="f-icon">⚡</div>
-      <h3>Tiempo Real (WebSocket)</h3>
-      <p>Django Channels + Redis. Cuotas actualizadas en vivo. Re-cotización obligatoria si la cuota cambia mientras el usuario tiene el ticket abierto.</p>
-      <span class="f-tag">2 pts rúbrica</span>
-    </div>
-    <div class="feature-card">
-      <div class="f-icon">🛡️</div>
-      <h3>Auditoría SHA-256</h3>
-      <p>Tabla append-only. Cada registro encadena el hash del anterior. Imposible manipular sin que se detecte en la verificación.</p>
-      <span class="f-tag">2 pts rúbrica</span>
-    </div>
-    <div class="feature-card">
-      <div class="f-icon">🚦</div>
-      <h3>Juego Responsable</h3>
-      <p>Límites diario/semanal/mensual bloqueantes. Cooldown 24h para subir límites. Autoexclusión temporal o indefinida, irreversible antes del plazo.</p>
-      <span class="f-tag">2 pts rúbrica</span>
-    </div>
-    <div class="feature-card">
-      <div class="f-icon">🔒</div>
-      <h3>Concurrencia sin Doble Gasto</h3>
-      <p>select_for_update() + atomic() en todos los servicios de wallet. Idempotency keys (UUID) como segunda capa de protección.</p>
-      <span class="f-tag">2 pts rúbrica</span>
-    </div>
-    <div class="feature-card">
-      <div class="f-icon">📊</div>
-      <h3>Dashboard Operador</h3>
-      <p>GGR en vivo, exposure por evento, volumen de apuestas. Reporte CSV mensual estilo MINCETUR (DS 005-2023-MINCETUR).</p>
-      <span class="f-tag">Nivel 3</span>
-    </div>
-    <div class="feature-card">
-      <div class="f-icon">🎯</div>
-      <h3>Apuestas Combinadas</h3>
-      <p>Cuota total = producto de cuotas individuales. Validación de selecciones mutuamente excluyentes. Cash-out anticipado con fórmula configurable.</p>
-      <span class="f-tag">Nivel 2</span>
-    </div>
-  </div>
-</div>
+<!-- CONTENIDO PRINCIPAL -->
+<div class="page-layout">
 
-<!-- USUARIOS DE PRUEBA -->
-<div class="section">
-  <div class="section-header">
-    <span class="section-icon">👥</span>
-    <h2 class="section-title">Usuarios de prueba</h2>
-    <span class="section-subtitle">Contraseña: <code style="color:#c084fc;font-family:monospace">FairBet2026!</code></span>
-  </div>
-  <div class="users-grid">
-    <div class="user-card">
-      <div class="u-name">👑 admin_fairbet</div>
-      <div class="u-row"><span>Email</span><span>admin@fairbet.edu</span></div>
-      <div class="u-row"><span>DNI</span><span>12345678</span></div>
-      <div class="u-row"><span>Fichas</span><span>0.0000</span></div>
-      <span class="estado-badge estado-admin">is_staff · is_superuser</span>
-    </div>
-    <div class="user-card">
-      <div class="u-name">🎮 jugador_verificado</div>
-      <div class="u-row"><span>Email</span><span>jugador@fairbet.edu</span></div>
-      <div class="u-row"><span>DNI</span><span>87654321</span></div>
-      <div class="u-row"><span>Fichas</span><span>500.0000</span></div>
-      <span class="estado-badge estado-verificado">verificado</span>
-    </div>
-    <div class="user-card">
-      <div class="u-name">⏳ jugador_pendiente</div>
-      <div class="u-row"><span>Email</span><span>pendiente@fairbet.edu</span></div>
-      <div class="u-row"><span>DNI</span><span>11223344</span></div>
-      <div class="u-row"><span>Fichas</span><span>0.0000</span></div>
-      <span class="estado-badge estado-pendiente">pendiente_verificacion</span>
-    </div>
-    <div class="user-card">
-      <div class="u-name">🆕 jugador_nuevo</div>
-      <div class="u-row"><span>Email</span><span>nuevo@fairbet.edu</span></div>
-      <div class="u-row"><span>DNI</span><span>55667788</span></div>
-      <div class="u-row"><span>Fichas</span><span>500.0000</span></div>
-      <span class="estado-badge estado-verificado">verificado</span>
-    </div>
-  </div>
-</div>
-
-<!-- ENDPOINTS -->
-<div class="section" id="endpoints">
-
-  <div class="section-header">
-    <span class="section-icon">👤</span>
-    <h2 class="section-title">Usuarios y Autenticación</h2>
-  </div>
-  <div class="endpoints-grid">
-    <a href="/api/usuarios/registro/" class="ep-card">
-      <span class="method-badge method-POST">POST</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/usuarios/registro/</div>
-        <div class="ep-desc">Registro con DNI peruano y validación de mayoría de edad</div>
-      </div>
-    </a>
-    <a href="/api/usuarios/login/" class="ep-card">
-      <span class="method-badge method-POST">POST</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/usuarios/login/</div>
-        <div class="ep-desc">Obtener JWT access + refresh token</div>
-      </div>
-    </a>
-    <a href="/api/usuarios/perfil/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/usuarios/perfil/</div>
-        <div class="ep-desc">Perfil del usuario autenticado con saldo calculado</div>
-      </div>
-    </a>
-    <a href="/api/usuarios/limites/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/usuarios/limites/</div>
-        <div class="ep-desc">Límites diario/semanal/mensual con cooldown 24h</div>
-      </div>
-    </a>
-    <a href="/api/usuarios/autoexclusion/" class="ep-card">
-      <span class="method-badge method-POST">POST</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/usuarios/autoexclusion/</div>
-        <div class="ep-desc">Solicitar autoexclusión bloqueante (7/30/90 días o indefinida)</div>
-      </div>
-    </a>
-    <a href="/api/usuarios/autoexclusiones/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/usuarios/autoexclusiones/</div>
-        <div class="ep-desc">Historial de autoexclusiones del usuario</div>
-      </div>
-    </a>
-  </div>
-
-  <div class="section-header" style="margin-top:40px">
-    <span class="section-icon">💰</span>
-    <h2 class="section-title">Wallet con Partida Doble</h2>
-  </div>
-  <div class="endpoints-grid">
-    <a href="/api/wallet/saldo/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/wallet/saldo/</div>
-        <div class="ep-desc">Saldo disponible y bloqueado (calculado, nunca almacenado)</div>
-      </div>
-    </a>
-    <a href="/api/wallet/recargar/" class="ep-card">
-      <span class="method-badge method-POST">POST</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/wallet/recargar/</div>
-        <div class="ep-desc">Recargar fichas virtuales (respeta límites)</div>
-      </div>
-    </a>
-    <a href="/api/wallet/retirar/" class="ep-card">
-      <span class="method-badge method-POST">POST</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/wallet/retirar/</div>
-        <div class="ep-desc">Retirar fichas con validación de saldo</div>
-      </div>
-    </a>
-    <a href="/api/wallet/historial/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/wallet/historial/</div>
-        <div class="ep-desc">Últimos 50 movimientos del wallet</div>
-      </div>
-    </a>
-    <a href="/api/wallet/resumen/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/wallet/resumen/</div>
-        <div class="ep-desc">Resumen mensual: recargado, apostado, ganado, balance</div>
-      </div>
-    </a>
-  </div>
-
-  <div class="section-header" style="margin-top:40px">
-    <span class="section-icon">⚽</span>
-    <h2 class="section-title">Eventos y Apuestas</h2>
-  </div>
-  <div class="endpoints-grid">
-    <a href="/api/eventos/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/eventos/</div>
-        <div class="ep-desc">Lista de eventos del Mundial 2026</div>
-      </div>
-    </a>
-    <a href="/api/eventos/1/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/eventos/&lt;id&gt;/</div>
-        <div class="ep-desc">Detalle con mercados y cuotas (1X2, Over/Under, BTTS)</div>
-      </div>
-    </a>
-    <a href="/api/apuestas/" class="ep-card">
-      <span class="method-badge method-POST">POST</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/apuestas/</div>
-        <div class="ep-desc">Crear apuesta simple con mensaje de consumo responsable</div>
-      </div>
-    </a>
-    <a href="/api/apuestas/in-play/" class="ep-card">
-      <span class="method-badge method-POST">POST</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/apuestas/in-play/</div>
-        <div class="ep-desc">Apostar con evento EN VIVO y cuotas dinámicas</div>
-      </div>
-    </a>
-    <a href="/api/apuestas/combinada/" class="ep-card">
-      <span class="method-badge method-POST">POST</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/apuestas/combinada/</div>
-        <div class="ep-desc">Apuesta acumuladora (cuota = producto de cuotas individuales)</div>
-      </div>
-    </a>
-    <a href="/api/apuestas/cash-out/" class="ep-card">
-      <span class="method-badge method-POST">POST</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/apuestas/cash-out/</div>
-        <div class="ep-desc">Cerrar apuesta anticipadamente con fórmula configurable</div>
-      </div>
-    </a>
-    <a href="/api/apuestas/mis-apuestas/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/apuestas/mis-apuestas/</div>
-        <div class="ep-desc">Historial de apuestas del usuario autenticado</div>
-      </div>
-    </a>
-    <div class="ep-card">
-      <span class="method-badge method-WS">WS</span>
-      <div class="ep-info">
-        <div class="ep-path">/ws/eventos/&lt;id&gt;/cuotas/</div>
-        <div class="ep-desc">Cuotas en tiempo real — notifica re-cotización al cliente</div>
+  <!-- SIDEBAR DEPORTES -->
+  <aside class="col-left">
+    <div class="card">
+      <div class="card-header"><h3>⚽ Deportes</h3></div>
+      <div class="card-body" style="padding:8px">
+        <div class="sport-item active" onclick="location.href='/eventos/'">
+          <span class="sport-icon">⚽</span> Fútbol <span class="sport-count">3</span>
+        </div>
+        <div class="sport-item" onclick="location.href='/eventos/?deporte=en_vivo'">
+          <span class="sport-icon">🔴</span> En Vivo <span class="sport-count live-dot" style="width:8px;height:8px;background:#ef4444;border-radius:50%;display:inline-block;animation:pulse 1s infinite"></span>
+        </div>
+        <div class="divider"></div>
+        <div style="padding:8px 10px;font-size:12px;color:var(--text3);font-weight:600">COMPETICIONES</div>
+        <div class="sport-item"><span class="sport-icon">🌍</span> Mundial 2026 <span class="sport-count">3</span></div>
+        <div class="sport-item"><span class="sport-icon">🇵🇪</span> Liga 1 Perú</div>
+        <div class="sport-item"><span class="sport-icon">🇪🇸</span> La Liga</div>
+        <div class="sport-item"><span class="sport-icon">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span> Premier League</div>
+        <div class="sport-item"><span class="sport-icon">🇩🇪</span> Bundesliga</div>
+        <div class="divider"></div>
+        <div style="padding:8px 10px;font-size:12px;color:var(--text3);font-weight:600">JUEGO RESPONSABLE</div>
+        <a href="/wallet/#limites" class="sport-item" style="color:var(--yellow)">
+          <span class="sport-icon">🛡️</span> Mis límites
+        </a>
+        <a href="/wallet/#autoexclusion" class="sport-item" style="color:var(--red)">
+          <span class="sport-icon">🚫</span> Autoexclusión
+        </a>
       </div>
     </div>
-  </div>
+  </aside>
 
-  <div class="section-header" style="margin-top:40px">
-    <span class="section-icon">🛡️</span>
-    <h2 class="section-title">Dashboard Operador (solo admin)</h2>
-  </div>
-  <div class="endpoints-grid">
-    <a href="/api/admin/dashboard/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/admin/dashboard/</div>
-        <div class="ep-desc">GGR, exposure por evento, usuarios activos 24h</div>
+  <!-- EVENTOS DESTACADOS -->
+  <main class="col-center">
+    <div class="section-title">🔥 Eventos destacados — Mundial 2026</div>
+
+    <div id="eventos-container">
+      <div style="text-align:center;padding:40px;color:var(--text2)">
+        <div style="font-size:32px;margin-bottom:10px">⚽</div>
+        Cargando eventos...
       </div>
-    </a>
-    <a href="/api/admin/auditoria/verificar/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/admin/auditoria/verificar/</div>
-        <div class="ep-desc">Verificar integridad de la cadena SHA-256</div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px">
+      <a href="/eventos/" class="btn btn-outline">Ver todos los eventos →</a>
+    </div>
+  </main>
+
+  <!-- BETSLIP -->
+  <aside class="col-right">
+    <div class="card betslip">
+      <div class="card-header">
+        <h3>🎯 Mi Ticket <span id="betslip-count" style="background:var(--primary);color:#fff;padding:2px 7px;border-radius:10px;font-size:11px;margin-left:4px"></span></h3>
       </div>
-    </a>
-    <a href="/api/admin/reporte-mincetur/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/admin/reporte-mincetur/</div>
-        <div class="ep-desc">Exportar CSV mensual DS 005-2023-MINCETUR</div>
+      <div class="betslip-tabs">
+        <div class="betslip-tab active">Simple / Combinada</div>
       </div>
-    </a>
-    <a href="/api/admin/fraude/alertas/" class="ep-card">
-      <span class="method-badge method-GET">GET</span>
-      <div class="ep-info">
-        <div class="ep-path">/api/admin/fraude/alertas/</div>
-        <div class="ep-desc">Alertas anti-fraude pendientes de revisión</div>
+      <div id="betslip-body"></div>
+      <div id="betslip-footer" style="display:none">
+        <div class="betslip-footer">
+          <div class="betslip-info">
+            <span>Cuota total</span><span class="val" id="total-odds">1.00</span>
+          </div>
+          <input type="number" class="monto-input" id="monto-apuesta" placeholder="Monto (S/)" min="1" step="1" value="10"/>
+          <div class="betslip-info">
+            <span>Ganancia potencial</span><span class="val text-green" id="ganancia-potencial">S/ 0.00</span>
+          </div>
+          <button class="btn-apostar" id="btn-apostar" onclick="confirmarApuesta()">✅ Confirmar Apuesta</button>
+          <div class="aviso-responsable">🛡️ Apuesta con responsabilidad. Moneda virtual educativa.</div>
+        </div>
       </div>
-    </a>
-  </div>
+    </div>
+
+    <!-- PROMOCIONES -->
+    <div class="card" style="margin-top:16px">
+      <div class="card-header"><h3>🎁 Bono de bienvenida</h3></div>
+      <div class="card-body">
+        <div style="font-size:28px;font-weight:900;color:var(--primary);margin-bottom:6px">500 fichas</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Gratis al registrarte. Rollover x5 para retirar.</div>
+        <a href="/registro/" class="btn btn-primary" style="width:100%;justify-content:center">Reclamar ahora</a>
+      </div>
+    </div>
+  </aside>
 
 </div>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+async function cargarEventos() {
+  const token = localStorage.getItem('fb_access');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    const res = await fetch('/api/eventos/', { headers });
+    if (!res.ok) throw new Error();
+    const eventos = await res.json();
+    renderEventos(eventos.slice(0, 3));
+  } catch {
+    document.getElementById('eventos-container').innerHTML =
+      `<div class="alert alert-info">Inicia sesión para ver las cuotas en tiempo real. <a href="/login/" style="color:var(--primary);font-weight:700">Entrar →</a></div>`;
+  }
+}
+
+function renderEventos(eventos) {
+  if (!eventos.length) {
+    document.getElementById('eventos-container').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2)">No hay eventos disponibles</div>';
+    return;
+  }
+  const html = eventos.map(ev => {
+    const mercado1x2 = ev.mercados?.find(m => m.tipo === '1X2');
+    const cuotas = mercado1x2?.cuotas || [];
+    const local = cuotas.find(c => c.seleccion === 'local');
+    const empate = cuotas.find(c => c.seleccion === 'empate');
+    const visitante = cuotas.find(c => c.seleccion === 'visitante');
+    const fecha = new Date(ev.fecha_inicio).toLocaleString('es-PE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+    const esVivo = ev.estado === 'en_vivo';
+
+    return `
+    <div class="evento-card">
+      <div class="evento-header">
+        <span class="liga">🌍 Mundial 2026 · Fase de Grupos</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${esVivo ? '<span class="live-badge"><span class="live-dot"></span>EN VIVO</span>' : `<span class="time">${fecha}</span>`}
+        </div>
+      </div>
+      <div class="evento-body">
+        <div class="equipos">
+          <div class="equipo">
+            <div class="equipo-name">${ev.equipo_local}</div>
+            <div class="equipo-sub">Local</div>
+          </div>
+          <div class="vs">VS</div>
+          <div class="equipo">
+            <div class="equipo-name">${ev.equipo_visitante}</div>
+            <div class="equipo-sub">Visitante</div>
+          </div>
+        </div>
+        ${mercado1x2 ? `
+        <div class="cuotas-row">
+          ${local ? `<div class="cuota-btn" data-cuota="${local.id}" onclick="addToBetslip(${local.id},'${ev.equipo_local}',${local.valor},'${ev.nombre}','1X2')">
+            <div class="label">1 · ${ev.equipo_local.substring(0,3).toUpperCase()}</div>
+            <div class="odds">${local.valor}</div>
+          </div>` : ''}
+          ${empate ? `<div class="cuota-btn" data-cuota="${empate.id}" onclick="addToBetslip(${empate.id},'Empate',${empate.valor},'${ev.nombre}','1X2')">
+            <div class="label">X · Empate</div>
+            <div class="odds">${empate.valor}</div>
+          </div>` : ''}
+          ${visitante ? `<div class="cuota-btn" data-cuota="${visitante.id}" onclick="addToBetslip(${visitante.id},'${ev.equipo_visitante}',${visitante.valor},'${ev.nombre}','1X2')">
+            <div class="label">2 · ${ev.equipo_visitante.substring(0,3).toUpperCase()}</div>
+            <div class="odds">${visitante.valor}</div>
+          </div>` : ''}
+        </div>
+        <div style="text-align:right;margin-top:10px">
+          <a href="/eventos/${ev.id}/" style="font-size:12px;color:var(--text2)">+${(ev.mercados?.length||1)*2} mercados →</a>
+        </div>` : `<div class="alert alert-info" style="margin:0"><a href="/login/">Inicia sesión</a> para ver cuotas</div>`}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('eventos-container').innerHTML = html;
+  marcarCuotasActivas();
+}
+
+cargarEventos();
+</script>
 {% endblock %}

@@ -10,41 +10,29 @@
 </head>
 <body>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="/" class="nav-brand">
-      <span class="icon">🎰</span>
-      <span class="name">FairBet Lab</span>
-    </a>
-    <div class="nav-links">
-      <a href="/" class="nav-link {% block nav_inicio %}{% endblock %}">Inicio</a>
-      <a href="/api/eventos/" class="nav-link {% block nav_eventos %}{% endblock %}">Eventos</a>
-      <a href="/admin/" class="nav-link {% block nav_admin %}{% endblock %}">Admin</a>
-      <a href="/api/usuarios/login/" class="nav-link active btn-sm">🔑 Login</a>
-    </div>
-  </nav>
-
-  <!-- AVISO LEGAL -->
-  <div class="aviso-legal">
-    ⚠️ Plataforma educativa con moneda virtual. No constituye una casa de apuestas.
+<nav class="navbar">
+  <a href="/" class="nav-logo"><span>🎰</span> FairBet Lab</a>
+  <div class="nav-links">
+    <a href="/" class="nav-link {% block nav_inicio %}{% endblock %}">Inicio</a>
+    <a href="/eventos/" class="nav-link {% block nav_eventos %}{% endblock %}">⚽ Fútbol</a>
+    <a href="/eventos/?deporte=en_vivo" class="nav-link">🔴 En Vivo</a>
+    <a href="/mis-apuestas/" class="nav-link {% block nav_apuestas %}{% endblock %}">Mis Apuestas</a>
+    <a href="/wallet/" class="nav-link {% block nav_wallet %}{% endblock %}">Wallet</a>
   </div>
+  <div class="nav-right" id="nav-right"></div>
+</nav>
 
-  <!-- CONTENIDO -->
-  {% block content %}{% endblock %}
+<div class="aviso">⚠️ Plataforma educativa · Moneda virtual · No constituye una casa de apuestas real</div>
 
-  <!-- FOOTER -->
-  <footer>
-    <div class="f-logo">FairBet Lab</div>
-    <div class="f-tech">
-      Desarrollado por <span>KellyCubas</span> &nbsp;·&nbsp;
-      <span>Django 5</span> · <span>DRF</span> · <span>PostgreSQL</span> ·
-      <span>Redis</span> · <span>Celery</span> · <span>Django Channels</span>
-      &nbsp;·&nbsp; Hora Lima: <span id="hora-lima">--:--:--</span>
-    </div>
-    <div class="f-legal">⚠️ Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</div>
-  </footer>
+{% block content %}{% endblock %}
 
-  <script src="{% static 'js/main.js' %}"></script>
-  {% block extra_js %}{% endblock %}
+<footer style="background:#0a0a12;border-top:1px solid #1e1e3a;padding:24px 32px;text-align:center;color:#475569;font-size:13px;margin-top:40px">
+  <div style="font-weight:700;color:#f97316;margin-bottom:6px">FairBet Lab &copy; 2026</div>
+  <div>Django 5 · PostgreSQL · Redis · Celery · Django Channels · KellyCubas</div>
+  <div style="color:#fbbf24;margin-top:8px;font-weight:600">⚠️ Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>
