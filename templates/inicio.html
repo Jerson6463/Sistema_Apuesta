@@ -1,262 +1,27 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FairBet Lab — Sistema de Apuestas</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+{% extends "base.html" %}
+{% load static %}
 
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f0f1a;
-      color: #e2e8f0;
-      min-height: 100vh;
-    }
+{% block title %}FairBet Lab — Inicio{% endblock %}
+{% block nav_inicio %}active{% endblock %}
 
-    /* HEADER */
-    header {
-      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
-      padding: 24px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 2px solid #4f46e5;
-      box-shadow: 0 4px 20px rgba(79,70,229,0.3);
-    }
+{% block content %}
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .logo-icon {
-      font-size: 40px;
-    }
-
-    .logo-text h1 {
-      font-size: 28px;
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: -0.5px;
-    }
-
-    .logo-text span {
-      font-size: 13px;
-      color: #a5b4fc;
-      font-weight: 400;
-    }
-
-    .badge {
-      background: #4f46e5;
-      color: #fff;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    /* AVISO LEGAL */
-    .aviso-legal {
-      background: #1e293b;
-      border-left: 4px solid #f59e0b;
-      padding: 12px 40px;
-      font-size: 13px;
-      color: #fcd34d;
-      text-align: center;
-      font-weight: 500;
-    }
-
-    /* HERO */
-    .hero {
-      text-align: center;
-      padding: 60px 40px 40px;
-    }
-
-    .hero h2 {
-      font-size: 42px;
-      font-weight: 900;
-      background: linear-gradient(90deg, #818cf8, #c084fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 14px;
-    }
-
-    .hero p {
-      color: #94a3b8;
-      font-size: 17px;
-      max-width: 600px;
-      margin: 0 auto 32px;
-    }
-
-    .hero-btns {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      padding: 13px 28px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 700;
-      text-decoration: none;
-      transition: transform .15s, box-shadow .15s;
-      display: inline-block;
-    }
-
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
-      color: #fff;
-    }
-
-    .btn-secondary {
-      background: #1e293b;
-      color: #a5b4fc;
-      border: 1px solid #4f46e5;
-    }
-
-    /* STATS */
-    .stats {
-      display: flex;
-      justify-content: center;
-      gap: 24px;
-      padding: 0 40px 50px;
-      flex-wrap: wrap;
-    }
-
-    .stat-card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 14px;
-      padding: 24px 36px;
-      text-align: center;
-      min-width: 160px;
-    }
-
-    .stat-card .num {
-      font-size: 36px;
-      font-weight: 900;
-      color: #818cf8;
-    }
-
-    .stat-card .label {
-      font-size: 13px;
-      color: #64748b;
-      margin-top: 4px;
-    }
-
-    /* ENDPOINTS */
-    .section {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 40px 60px;
-    }
-
-    .section-title {
-      font-size: 20px;
-      font-weight: 700;
-      color: #c084fc;
-      margin-bottom: 20px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #1e293b;
-    }
-
-    .endpoints-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 14px;
-      margin-bottom: 40px;
-    }
-
-    .endpoint-card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      transition: border-color .2s, background .2s;
-      text-decoration: none;
-      color: inherit;
-    }
-
-    .endpoint-card:hover {
-      border-color: #4f46e5;
-      background: #1e2a45;
-    }
-
-    .method {
-      font-size: 11px;
-      font-weight: 800;
-      padding: 4px 8px;
-      border-radius: 6px;
-      min-width: 48px;
-      text-align: center;
-    }
-
-    .get  { background: #14532d; color: #4ade80; }
-    .post { background: #1e3a5f; color: #60a5fa; }
-    .ws   { background: #3b1f6e; color: #c084fc; }
-
-    .ep-info .path {
-      font-size: 13px;
-      font-family: 'Consolas', monospace;
-      color: #e2e8f0;
-    }
-
-    .ep-info .desc {
-      font-size: 12px;
-      color: #64748b;
-      margin-top: 2px;
-    }
-
-    /* FOOTER */
-    footer {
-      background: #0a0a14;
-      border-top: 1px solid #1e293b;
-      padding: 24px 40px;
-      text-align: center;
-      color: #475569;
-      font-size: 13px;
-    }
-
-    footer span { color: #4f46e5; }
-  </style>
-</head>
-<body>
-
-<header>
-  <div class="logo">
-    <div class="logo-icon">🎰</div>
-    <div class="logo-text">
-      <h1>FairBet Lab</h1>
-      <span>Simulador de apuestas deportivas con moneda virtual</span>
-    </div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span>⚽</span> Mundial 2026 · Apuestas con fichas virtuales
   </div>
-  <div class="badge">v1.0.0 · Django 5 · DRF</div>
-</header>
-
-<div class="aviso-legal">
-  ⚠️ Plataforma educativa con moneda virtual. No constituye una casa de apuestas.
-</div>
-
-<div class="hero">
-  <h2>Sistema de Apuestas</h2>
-  <p>Plataforma con wallet de partida doble, apuestas en tiempo real, auditoría inmutable SHA-256 y controles de juego responsable.</p>
+  <h1>Sistema de<br/>Apuestas FairBet</h1>
+  <p>Plataforma educativa con wallet de partida doble, apuestas en tiempo real, auditoría SHA-256 y controles de juego responsable.</p>
   <div class="hero-btns">
     <a href="/admin/" class="btn btn-primary">🔧 Panel Admin</a>
-    <a href="/api/eventos/" class="btn btn-secondary">⚽ Ver Eventos</a>
-    <a href="/api/usuarios/login/" class="btn btn-secondary">🔑 Login API</a>
+    <a href="/api/eventos/" class="btn btn-outline">⚽ Ver Eventos (API)</a>
+    <a href="#endpoints" class="btn btn-outline">📋 Ver Endpoints</a>
   </div>
-</div>
+</section>
 
-<div class="stats">
+<!-- STATS -->
+<div class="stats-row">
   <div class="stat-card">
     <div class="num">38</div>
     <div class="label">Commits</div>
@@ -267,130 +32,307 @@
   </div>
   <div class="stat-card">
     <div class="num">21</div>
-    <div class="label">Endpoints</div>
+    <div class="label">Endpoints API</div>
   </div>
   <div class="stat-card">
     <div class="num">10</div>
     <div class="label">ADRs</div>
   </div>
   <div class="stat-card">
-    <div class="num">SHA256</div>
-    <div class="label">Auditoría</div>
+    <div class="num">80</div>
+    <div class="label">% Cobertura mín.</div>
   </div>
 </div>
 
+<!-- CARACTERÍSTICAS -->
 <div class="section">
+  <div class="section-header">
+    <span class="section-icon">✨</span>
+    <h2 class="section-title">Funcionalidades implementadas</h2>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="f-icon">💰</div>
+      <h3>Wallet Partida Doble</h3>
+      <p>Toda operación genera dos entradas balanceadas. El saldo nunca se almacena — siempre se calcula con SUM(créditos) − SUM(débitos).</p>
+      <span class="f-tag">4 pts rúbrica</span>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">🔄</div>
+      <h3>Máquina de Estados</h3>
+      <p>Apuestas y Eventos con django-fsm. Transiciones protegidas: programado → en_vivo → finalizado / suspendido / anulado.</p>
+      <span class="f-tag">3 pts rúbrica</span>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">⚡</div>
+      <h3>Tiempo Real (WebSocket)</h3>
+      <p>Django Channels + Redis. Cuotas actualizadas en vivo. Re-cotización obligatoria si la cuota cambia mientras el usuario tiene el ticket abierto.</p>
+      <span class="f-tag">2 pts rúbrica</span>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">🛡️</div>
+      <h3>Auditoría SHA-256</h3>
+      <p>Tabla append-only. Cada registro encadena el hash del anterior. Imposible manipular sin que se detecte en la verificación.</p>
+      <span class="f-tag">2 pts rúbrica</span>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">🚦</div>
+      <h3>Juego Responsable</h3>
+      <p>Límites diario/semanal/mensual bloqueantes. Cooldown 24h para subir límites. Autoexclusión temporal o indefinida, irreversible antes del plazo.</p>
+      <span class="f-tag">2 pts rúbrica</span>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">🔒</div>
+      <h3>Concurrencia sin Doble Gasto</h3>
+      <p>select_for_update() + atomic() en todos los servicios de wallet. Idempotency keys (UUID) como segunda capa de protección.</p>
+      <span class="f-tag">2 pts rúbrica</span>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">📊</div>
+      <h3>Dashboard Operador</h3>
+      <p>GGR en vivo, exposure por evento, volumen de apuestas. Reporte CSV mensual estilo MINCETUR (DS 005-2023-MINCETUR).</p>
+      <span class="f-tag">Nivel 3</span>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">🎯</div>
+      <h3>Apuestas Combinadas</h3>
+      <p>Cuota total = producto de cuotas individuales. Validación de selecciones mutuamente excluyentes. Cash-out anticipado con fórmula configurable.</p>
+      <span class="f-tag">Nivel 2</span>
+    </div>
+  </div>
+</div>
 
-  <div class="section-title">👤 Usuarios y Autenticación</div>
+<!-- USUARIOS DE PRUEBA -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">👥</span>
+    <h2 class="section-title">Usuarios de prueba</h2>
+    <span class="section-subtitle">Contraseña: <code style="color:#c084fc;font-family:monospace">FairBet2026!</code></span>
+  </div>
+  <div class="users-grid">
+    <div class="user-card">
+      <div class="u-name">👑 admin_fairbet</div>
+      <div class="u-row"><span>Email</span><span>admin@fairbet.edu</span></div>
+      <div class="u-row"><span>DNI</span><span>12345678</span></div>
+      <div class="u-row"><span>Fichas</span><span>0.0000</span></div>
+      <span class="estado-badge estado-admin">is_staff · is_superuser</span>
+    </div>
+    <div class="user-card">
+      <div class="u-name">🎮 jugador_verificado</div>
+      <div class="u-row"><span>Email</span><span>jugador@fairbet.edu</span></div>
+      <div class="u-row"><span>DNI</span><span>87654321</span></div>
+      <div class="u-row"><span>Fichas</span><span>500.0000</span></div>
+      <span class="estado-badge estado-verificado">verificado</span>
+    </div>
+    <div class="user-card">
+      <div class="u-name">⏳ jugador_pendiente</div>
+      <div class="u-row"><span>Email</span><span>pendiente@fairbet.edu</span></div>
+      <div class="u-row"><span>DNI</span><span>11223344</span></div>
+      <div class="u-row"><span>Fichas</span><span>0.0000</span></div>
+      <span class="estado-badge estado-pendiente">pendiente_verificacion</span>
+    </div>
+    <div class="user-card">
+      <div class="u-name">🆕 jugador_nuevo</div>
+      <div class="u-row"><span>Email</span><span>nuevo@fairbet.edu</span></div>
+      <div class="u-row"><span>DNI</span><span>55667788</span></div>
+      <div class="u-row"><span>Fichas</span><span>500.0000</span></div>
+      <span class="estado-badge estado-verificado">verificado</span>
+    </div>
+  </div>
+</div>
+
+<!-- ENDPOINTS -->
+<div class="section" id="endpoints">
+
+  <div class="section-header">
+    <span class="section-icon">👤</span>
+    <h2 class="section-title">Usuarios y Autenticación</h2>
+  </div>
   <div class="endpoints-grid">
-    <a href="/api/usuarios/registro/" class="endpoint-card">
-      <span class="method post">POST</span>
-      <div class="ep-info"><div class="path">/api/usuarios/registro/</div><div class="desc">Registro con DNI peruano y mayoría de edad</div></div>
+    <a href="/api/usuarios/registro/" class="ep-card">
+      <span class="method-badge method-POST">POST</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/usuarios/registro/</div>
+        <div class="ep-desc">Registro con DNI peruano y validación de mayoría de edad</div>
+      </div>
     </a>
-    <a href="/api/usuarios/login/" class="endpoint-card">
-      <span class="method post">POST</span>
-      <div class="ep-info"><div class="path">/api/usuarios/login/</div><div class="desc">Obtener JWT (access + refresh)</div></div>
+    <a href="/api/usuarios/login/" class="ep-card">
+      <span class="method-badge method-POST">POST</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/usuarios/login/</div>
+        <div class="ep-desc">Obtener JWT access + refresh token</div>
+      </div>
     </a>
-    <a href="/api/usuarios/perfil/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/usuarios/perfil/</div><div class="desc">Perfil del usuario autenticado + saldo</div></div>
+    <a href="/api/usuarios/perfil/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/usuarios/perfil/</div>
+        <div class="ep-desc">Perfil del usuario autenticado con saldo calculado</div>
+      </div>
     </a>
-    <a href="/api/usuarios/limites/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/usuarios/limites/</div><div class="desc">Límites diario/semanal/mensual (cooldown 24h)</div></div>
+    <a href="/api/usuarios/limites/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/usuarios/limites/</div>
+        <div class="ep-desc">Límites diario/semanal/mensual con cooldown 24h</div>
+      </div>
     </a>
-    <a href="/api/usuarios/autoexclusion/" class="endpoint-card">
-      <span class="method post">POST</span>
-      <div class="ep-info"><div class="path">/api/usuarios/autoexclusion/</div><div class="desc">Solicitar autoexclusión (bloqueante)</div></div>
+    <a href="/api/usuarios/autoexclusion/" class="ep-card">
+      <span class="method-badge method-POST">POST</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/usuarios/autoexclusion/</div>
+        <div class="ep-desc">Solicitar autoexclusión bloqueante (7/30/90 días o indefinida)</div>
+      </div>
+    </a>
+    <a href="/api/usuarios/autoexclusiones/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/usuarios/autoexclusiones/</div>
+        <div class="ep-desc">Historial de autoexclusiones del usuario</div>
+      </div>
     </a>
   </div>
 
-  <div class="section-title">💰 Wallet con Partida Doble</div>
+  <div class="section-header" style="margin-top:40px">
+    <span class="section-icon">💰</span>
+    <h2 class="section-title">Wallet con Partida Doble</h2>
+  </div>
   <div class="endpoints-grid">
-    <a href="/api/wallet/saldo/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/wallet/saldo/</div><div class="desc">Saldo disponible y bloqueado (calculado)</div></div>
+    <a href="/api/wallet/saldo/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/wallet/saldo/</div>
+        <div class="ep-desc">Saldo disponible y bloqueado (calculado, nunca almacenado)</div>
+      </div>
     </a>
-    <a href="/api/wallet/recargar/" class="endpoint-card">
-      <span class="method post">POST</span>
-      <div class="ep-info"><div class="path">/api/wallet/recargar/</div><div class="desc">Recargar fichas virtuales</div></div>
+    <a href="/api/wallet/recargar/" class="ep-card">
+      <span class="method-badge method-POST">POST</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/wallet/recargar/</div>
+        <div class="ep-desc">Recargar fichas virtuales (respeta límites)</div>
+      </div>
     </a>
-    <a href="/api/wallet/retirar/" class="endpoint-card">
-      <span class="method post">POST</span>
-      <div class="ep-info"><div class="path">/api/wallet/retirar/</div><div class="desc">Retirar fichas virtuales</div></div>
+    <a href="/api/wallet/retirar/" class="ep-card">
+      <span class="method-badge method-POST">POST</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/wallet/retirar/</div>
+        <div class="ep-desc">Retirar fichas con validación de saldo</div>
+      </div>
     </a>
-    <a href="/api/wallet/historial/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/wallet/historial/</div><div class="desc">Últimos 50 movimientos del wallet</div></div>
+    <a href="/api/wallet/historial/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/wallet/historial/</div>
+        <div class="ep-desc">Últimos 50 movimientos del wallet</div>
+      </div>
     </a>
-    <a href="/api/wallet/resumen/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/wallet/resumen/</div><div class="desc">Resumen mensual de movimientos</div></div>
+    <a href="/api/wallet/resumen/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/wallet/resumen/</div>
+        <div class="ep-desc">Resumen mensual: recargado, apostado, ganado, balance</div>
+      </div>
     </a>
   </div>
 
-  <div class="section-title">⚽ Eventos y Apuestas</div>
+  <div class="section-header" style="margin-top:40px">
+    <span class="section-icon">⚽</span>
+    <h2 class="section-title">Eventos y Apuestas</h2>
+  </div>
   <div class="endpoints-grid">
-    <a href="/api/eventos/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/eventos/</div><div class="desc">Lista de eventos del Mundial 2026</div></div>
+    <a href="/api/eventos/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/eventos/</div>
+        <div class="ep-desc">Lista de eventos del Mundial 2026</div>
+      </div>
     </a>
-    <a href="/api/eventos/1/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/eventos/&lt;id&gt;/</div><div class="desc">Detalle con mercados y cuotas</div></div>
+    <a href="/api/eventos/1/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/eventos/&lt;id&gt;/</div>
+        <div class="ep-desc">Detalle con mercados y cuotas (1X2, Over/Under, BTTS)</div>
+      </div>
     </a>
-    <a href="/api/apuestas/" class="endpoint-card">
-      <span class="method post">POST</span>
-      <div class="ep-info"><div class="path">/api/apuestas/</div><div class="desc">Crear apuesta simple</div></div>
+    <a href="/api/apuestas/" class="ep-card">
+      <span class="method-badge method-POST">POST</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/apuestas/</div>
+        <div class="ep-desc">Crear apuesta simple con mensaje de consumo responsable</div>
+      </div>
     </a>
-    <a href="/api/apuestas/in-play/" class="endpoint-card">
-      <span class="method post">POST</span>
-      <div class="ep-info"><div class="path">/api/apuestas/in-play/</div><div class="desc">Apuesta con evento EN VIVO</div></div>
+    <a href="/api/apuestas/in-play/" class="ep-card">
+      <span class="method-badge method-POST">POST</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/apuestas/in-play/</div>
+        <div class="ep-desc">Apostar con evento EN VIVO y cuotas dinámicas</div>
+      </div>
     </a>
-    <a href="/api/apuestas/combinada/" class="endpoint-card">
-      <span class="method post">POST</span>
-      <div class="ep-info"><div class="path">/api/apuestas/combinada/</div><div class="desc">Apuesta acumuladora</div></div>
+    <a href="/api/apuestas/combinada/" class="ep-card">
+      <span class="method-badge method-POST">POST</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/apuestas/combinada/</div>
+        <div class="ep-desc">Apuesta acumuladora (cuota = producto de cuotas individuales)</div>
+      </div>
     </a>
-    <a href="/api/apuestas/cash-out/" class="endpoint-card">
-      <span class="method post">POST</span>
-      <div class="ep-info"><div class="path">/api/apuestas/cash-out/</div><div class="desc">Cerrar apuesta anticipadamente</div></div>
+    <a href="/api/apuestas/cash-out/" class="ep-card">
+      <span class="method-badge method-POST">POST</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/apuestas/cash-out/</div>
+        <div class="ep-desc">Cerrar apuesta anticipadamente con fórmula configurable</div>
+      </div>
     </a>
-    <a href="/api/apuestas/mis-apuestas/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/apuestas/mis-apuestas/</div><div class="desc">Historial de apuestas del usuario</div></div>
+    <a href="/api/apuestas/mis-apuestas/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/apuestas/mis-apuestas/</div>
+        <div class="ep-desc">Historial de apuestas del usuario autenticado</div>
+      </div>
     </a>
-    <div class="endpoint-card">
-      <span class="method ws">WS</span>
-      <div class="ep-info"><div class="path">/ws/eventos/&lt;id&gt;/cuotas/</div><div class="desc">Cuotas en tiempo real (WebSocket)</div></div>
+    <div class="ep-card">
+      <span class="method-badge method-WS">WS</span>
+      <div class="ep-info">
+        <div class="ep-path">/ws/eventos/&lt;id&gt;/cuotas/</div>
+        <div class="ep-desc">Cuotas en tiempo real — notifica re-cotización al cliente</div>
+      </div>
     </div>
   </div>
 
-  <div class="section-title">🛡️ Dashboard Operador (solo admin)</div>
+  <div class="section-header" style="margin-top:40px">
+    <span class="section-icon">🛡️</span>
+    <h2 class="section-title">Dashboard Operador (solo admin)</h2>
+  </div>
   <div class="endpoints-grid">
-    <a href="/api/admin/dashboard/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/admin/dashboard/</div><div class="desc">GGR, exposure, usuarios activos</div></div>
+    <a href="/api/admin/dashboard/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/admin/dashboard/</div>
+        <div class="ep-desc">GGR, exposure por evento, usuarios activos 24h</div>
+      </div>
     </a>
-    <a href="/api/admin/auditoria/verificar/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/admin/auditoria/verificar/</div><div class="desc">Verificar integridad cadena SHA-256</div></div>
+    <a href="/api/admin/auditoria/verificar/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/admin/auditoria/verificar/</div>
+        <div class="ep-desc">Verificar integridad de la cadena SHA-256</div>
+      </div>
     </a>
-    <a href="/api/admin/reporte-mincetur/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/admin/reporte-mincetur/</div><div class="desc">Exportar CSV DS 005-2023-MINCETUR</div></div>
+    <a href="/api/admin/reporte-mincetur/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/admin/reporte-mincetur/</div>
+        <div class="ep-desc">Exportar CSV mensual DS 005-2023-MINCETUR</div>
+      </div>
     </a>
-    <a href="/api/admin/fraude/alertas/" class="endpoint-card">
-      <span class="method get">GET</span>
-      <div class="ep-info"><div class="path">/api/admin/fraude/alertas/</div><div class="desc">Alertas anti-fraude pendientes</div></div>
+    <a href="/api/admin/fraude/alertas/" class="ep-card">
+      <span class="method-badge method-GET">GET</span>
+      <div class="ep-info">
+        <div class="ep-path">/api/admin/fraude/alertas/</div>
+        <div class="ep-desc">Alertas anti-fraude pendientes de revisión</div>
+      </div>
     </a>
   </div>
 
 </div>
 
-<footer>
-  <p>FairBet Lab &copy; 2026 — Desarrollado por <span>KellyCubas</span> · Stack: Django 5 · DRF · PostgreSQL · Redis · Celery · Django Channels</p>
-  <p style="margin-top:8px; color: #f59e0b;">⚠️ Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</p>
-</footer>
-
-</body>
-</html>
+{% endblock %}
