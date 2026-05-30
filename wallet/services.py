@@ -133,6 +133,53 @@ def _verificar_limite_diario(usuario, monto: Decimal):
         )
 
 
+def _verificar_limite_semanal(usuario, monto: Decimal):
+    from users.models import LimiteJuego
+    from django.utils import timezone
+
+    limite = LimiteJuego.objects.get(usuario=usuario)
+    inicio_semana = timezone.now().date() - timezone.timedelta(days=timezone.now().weekday())
+    recargado_semana = (
+        EntradaContable.objects.filter(
+            usuario=usuario,
+            cuenta=TipoCuenta.WALLET_USUARIO,
+            direccion=DireccionMovimiento.CREDITO,
+            tipo_referencia=TipoReferencia.RECARGA,
+            creado_en__date__gte=inicio_semana,
+        ).aggregate(total=Sum("monto"))["total"]
+        or Decimal("0")
+    )
+    if recargado_semana + monto > limite.limite_semanal:
+        raise LimiteSuperadoError(
+            f"Superas el límite semanal de fichas ({limite.limite_semanal}). "
+            f"Ya recargaste {recargado_semana} esta semana."
+        )
+
+
+def _verificar_limite_mensual(usuario, monto: Decimal):
+    from users.models import LimiteJuego
+    from django.utils import timezone
+
+    limite = LimiteJuego.objects.get(usuario=usuario)
+    ahora = timezone.now()
+    recargado_mes = (
+        EntradaContable.objects.filter(
+            usuario=usuario,
+            cuenta=TipoCuenta.WALLET_USUARIO,
+            direccion=DireccionMovimiento.CREDITO,
+            tipo_referencia=TipoReferencia.RECARGA,
+            creado_en__year=ahora.year,
+            creado_en__month=ahora.month,
+        ).aggregate(total=Sum("monto"))["total"]
+        or Decimal("0")
+    )
+    if recargado_mes + monto > limite.limite_mensual:
+        raise LimiteSuperadoError(
+            f"Superas el límite mensual de fichas ({limite.limite_mensual}). "
+            f"Ya recargaste {recargado_mes} este mes."
+        )
+
+
 # ── Operaciones públicas ───────────────────────────────────────────────────────
 
 @transaction.atomic
@@ -150,6 +197,8 @@ def recargar_fichas(
         return  # idempotencia
 
     _verificar_limite_diario(usuario, monto)
+    _verificar_limite_semanal(usuario, monto)
+    _verificar_limite_mensual(usuario, monto)
 
     # select_for_update sobre las entradas del usuario para evitar condiciones de carrera
     EntradaContable.objects.select_for_update().filter(usuario=usuario)
