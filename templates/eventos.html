@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Eventos — FairBet Lab{% endblock %}
 {% block nav_eventos %}active{% endblock %}
 
@@ -8,36 +9,42 @@
   <!-- SIDEBAR IZQUIERDO -->
   <aside class="sidebar-left">
     <div class="sidebar-section">
-      <div class="sidebar-title">Estado</div>
-      <div class="sidebar-item active" id="f-todos" onclick="filtrar('todos',this)">
-        <i class="fa-solid fa-list"></i> Todos
-        <span class="sidebar-count" id="cnt-total">--</span>
-      </div>
-      <div class="sidebar-item" id="f-programado" onclick="filtrar('programado',this)">
-        <i class="fa-regular fa-clock"></i> Programados
-        <span class="sidebar-count" id="cnt-prog">--</span>
-      </div>
-      <div class="sidebar-item" id="f-en_vivo" onclick="filtrar('en_vivo',this)">
-        <i class="fa-solid fa-circle" style="color:var(--red);font-size:8px"></i> En Vivo
-        <span class="sidebar-count" id="cnt-vivo">--</span>
+      <div class="sidebar-title">Deportes</div>
+      <div class="sidebar-item {% if not estado_filtro %}active{% endif %}"
+           onclick="location.href='{% url 'eventos' %}'">
+        <i class="fa-solid fa-futbol"></i> Futbol
+        <span class="sidebar-count">{{ eventos|length }}</span>
       </div>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-title">Mercados</div>
-      <div class="sidebar-item" onclick="scrollToMercado('1X2')">
-        <i class="fa-solid fa-chart-simple"></i> 1X2
+      <div class="sidebar-title">Competiciones</div>
+      <div class="sidebar-item" onclick="location.href='{% url 'eventos' %}'">
+        <i class="fa-solid fa-earth-americas"></i> Mundial 2026
+        <span class="sidebar-count">{{ eventos|length }}</span>
       </div>
-      <div class="sidebar-item" onclick="scrollToMercado('over_under')">
-        <i class="fa-solid fa-arrow-up-9-1"></i> Over/Under
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> Liga 1 Peru</div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> La Liga</div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> Premier League</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Filtrar</div>
+      <div class="sidebar-item {% if not estado_filtro %}active{% endif %}"
+           onclick="location.href='{% url 'eventos' %}'">
+        <i class="fa-solid fa-list"></i> Todos
       </div>
-      <div class="sidebar-item" onclick="scrollToMercado('btts')">
-        <i class="fa-solid fa-arrows-left-right"></i> Ambos Anotan
+      <div class="sidebar-item {% if estado_filtro == 'en_vivo' %}active{% endif %}"
+           onclick="location.href='{% url 'eventos' %}?estado=en_vivo'">
+        <span class="live-dot"></span> En Vivo
+      </div>
+      <div class="sidebar-item {% if estado_filtro == 'programado' %}active{% endif %}"
+           onclick="location.href='{% url 'eventos' %}?estado=programado'">
+        <i class="fa-solid fa-clock"></i> Programados
       </div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">Juego Responsable</div>
-      <div class="sidebar-item" onclick="location.href='/wallet/'" style="color:var(--primary)">
-        <i class="fa-solid fa-shield-halved"></i> Mis limites
+      <div class="sidebar-item" onclick="location.href='{% url 'wallet' %}'" style="color:var(--primary)">
+        <i class="fa-solid fa-shield-halved"></i> Mis límites
       </div>
     </div>
   </aside>
@@ -45,120 +52,30 @@
   <!-- CONTENIDO CENTRAL -->
   <main class="main-content">
     <div class="section-hdr">
-      <h2><i class="fa-solid fa-futbol"></i> Eventos — Mundial 2026</h2>
-      <span style="font-size:13px;color:var(--text-3)" id="label-total"></span>
+      <h2>
+        {% if estado_filtro == 'en_vivo' %}
+          <span class="live-dot"></span> En Vivo
+        {% else %}
+          <i class="fa-solid fa-futbol"></i> Eventos disponibles
+        {% endif %}
+      </h2>
+      <span style="color:var(--text-3);font-size:13px">{{ eventos|length }} evento(s)</span>
     </div>
 
-    <div id="eventos-wrap">
-      <div style="text-align:center;padding:60px;color:var(--text-3)">
-        <i class="fa-solid fa-spinner fa-spin" style="font-size:28px;display:block;margin-bottom:12px"></i>
-        Cargando eventos...
+    {% if eventos %}
+      {% for ev_data in eventos %}
+        {% include "partials/evento_card.html" %}
+      {% endfor %}
+    {% else %}
+      <div class="alert alert-info">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>No hay eventos disponibles con ese filtro.</span>
       </div>
-    </div>
+    {% endif %}
   </main>
 
   <!-- BETSLIP -->
-  <aside class="sidebar-right">
-    <div class="betslip">
-      <div class="betslip-header">
-        <h3>
-          <i class="fa-solid fa-ticket"></i> Mi Ticket
-          <span class="bs-count" id="bs-count"></span>
-        </h3>
-        <button onclick="betslip=[];saveBetslip();renderBetslip()" style="color:var(--text-3);font-size:12px">
-          Limpiar
-        </button>
-      </div>
-      <div id="bs-body"></div>
-      <div id="bs-foot" style="display:none">
-        <div class="betslip-foot">
-          <div class="bs-row">
-            <span>Cuota total</span>
-            <span class="val" id="bs-odds-total">1.00</span>
-          </div>
-          <input type="number" id="bs-monto" class="bs-monto" placeholder="Monto en S/" min="1" step="1" value="10"/>
-          <div class="bs-row">
-            <span>Ganancia potencial</span>
-            <span class="val green" id="bs-ganancia">S/ 0.00</span>
-          </div>
-          <button class="btn-apostar" id="btn-apostar" onclick="confirmarApuesta()">
-            <i class="fa-solid fa-check"></i> Confirmar Apuesta
-          </button>
-          <p class="bs-legal">
-            <i class="fa-solid fa-shield-halved"></i>
-            Apuesta con responsabilidad. Moneda virtual educativa sin valor real.
-          </p>
-        </div>
-      </div>
-    </div>
-  </aside>
+  {% include "partials/betslip.html" %}
 
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-const FLAGS = { Peru:'🇵🇪', Brasil:'🇧🇷', Argentina:'🇦🇷', Mexico:'🇲🇽', Uruguay:'🇺🇾', Colombia:'🇨🇴' };
-let allEventos = [];
-
-async function init() {
-  if (!isLoggedIn()) {
-    document.getElementById('eventos-wrap').innerHTML = `
-      <div class="alert alert-info">
-        <i class="fa-solid fa-lock"></i>
-        <span>Inicia sesion para ver las cuotas en tiempo real.
-          <a href="/login/" style="color:var(--primary);font-weight:700;margin-left:6px">Iniciar sesion</a> &nbsp;|&nbsp;
-          <a href="/registro/" style="color:var(--primary);font-weight:700">Registrarse</a>
-        </span>
-      </div>`;
-    return;
-  }
-  try {
-    const res = await apiFetch('/api/eventos/');
-    if (!res.ok) throw new Error();
-    allEventos = await res.json();
-    actualizarContadores();
-    renderEventos(allEventos);
-  } catch {
-    document.getElementById('eventos-wrap').innerHTML =
-      '<div class="alert alert-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Error al cargar eventos.</span></div>';
-  }
-}
-
-function actualizarContadores() {
-  document.getElementById('cnt-total').textContent = allEventos.length;
-  document.getElementById('cnt-prog').textContent  = allEventos.filter(e=>e.estado==='programado').length;
-  document.getElementById('cnt-vivo').textContent  = allEventos.filter(e=>e.estado==='en_vivo').length;
-}
-
-function filtrar(estado, el) {
-  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
-  el.classList.add('active');
-  const lista = estado==='todos' ? allEventos : allEventos.filter(e=>e.estado===estado);
-  renderEventos(lista);
-}
-
-async function renderEventos(lista) {
-  const wrap = document.getElementById('eventos-wrap');
-  const lbl  = document.getElementById('label-total');
-  if (lbl) lbl.textContent = `${lista.length} evento${lista.length!==1?'s':''}`;
-
-  if (!lista.length) {
-    wrap.innerHTML = '<p style="text-align:center;padding:60px;color:var(--text-3)">No hay eventos con ese filtro.</p>';
-    return;
-  }
-  wrap.innerHTML = '';
-  for (const ev of lista) {
-    const detRes = await apiFetch(`/api/eventos/${ev.id}/`);
-    const det = detRes?.ok ? await detRes.json() : null;
-    const mercados = det?.mercados?.filter(m => ['1X2','over_under','btts'].includes(m.tipo)) || [];
-    wrap.appendChild(buildEventoCard(ev, mercados));
-  }
-  marcarCuotasActivas();
-}
-
-function scrollToMercado(tipo) { window.scrollTo({top:0,behavior:'smooth'}); }
-
-init();
-</script>
 {% endblock %}

@@ -1,0 +1,99 @@
+{% load static %}
+<div class="evento-card" id="card-ev-{{ ev_data.evento.id }}">
+
+  <!-- Header -->
+  <div class="evento-meta">
+    <span class="liga">
+      <i class="fa-solid fa-earth-americas"></i> Mundial 2026 &middot; Fase de Grupos
+    </span>
+    {% if ev_data.evento.estado == 'en_vivo' %}
+      <span class="live-badge"><span class="live-dot"></span> EN VIVO</span>
+    {% else %}
+      <span style="display:flex;align-items:center;gap:5px;color:var(--text-3);font-size:13px">
+        <i class="fa-regular fa-clock"></i>
+        {{ ev_data.evento.fecha_inicio|date:"D, d M., g:i a" }}
+      </span>
+    {% endif %}
+  </div>
+
+  <div class="evento-body">
+
+    <!-- Equipos -->
+    <div class="equipos">
+      <div class="equipo">
+        {% if ev_data.flag_local %}
+          <img class="equipo-flag" src="{{ ev_data.flag_local }}" alt="{{ ev_data.evento.equipo_local }}"
+               onerror="this.outerHTML='<div class=\'equipo-flag-placeholder\'>{{ ev_data.local_abbr }}</div>'"/>
+        {% else %}
+          <div class="equipo-flag-placeholder">{{ ev_data.local_abbr }}</div>
+        {% endif %}
+        <div class="equipo-name">{{ ev_data.evento.equipo_local }}</div>
+        <div class="equipo-label">LOCAL</div>
+      </div>
+
+      <div class="vs-badge">VS</div>
+
+      <div class="equipo">
+        {% if ev_data.flag_visitante %}
+          <img class="equipo-flag" src="{{ ev_data.flag_visitante }}" alt="{{ ev_data.evento.equipo_visitante }}"
+               onerror="this.outerHTML='<div class=\'equipo-flag-placeholder\'>{{ ev_data.visitante_abbr }}</div>'"/>
+        {% else %}
+          <div class="equipo-flag-placeholder">{{ ev_data.visitante_abbr }}</div>
+        {% endif %}
+        <div class="equipo-name">{{ ev_data.evento.equipo_visitante }}</div>
+        <div class="equipo-label">VISITANTE</div>
+      </div>
+    </div>
+
+    <!-- Mercados y cuotas -->
+    {% for m_data in ev_data.mercados %}
+    <div>
+      <div class="mercado-label">
+        {% if m_data.mercado.tipo == '1X2' %}
+          <i class="fa-solid fa-chart-simple"></i>
+        {% elif m_data.mercado.tipo == 'over_under' %}
+          <i class="fa-solid fa-arrows-up-down"></i>
+        {% elif m_data.mercado.tipo == 'btts' %}
+          <i class="fa-solid fa-arrows-left-right"></i>
+        {% else %}
+          <i class="fa-solid fa-scale-balanced"></i>
+        {% endif %}
+        {{ m_data.label }}
+      </div>
+      <div class="cuotas-row">
+        {% for c_data in m_data.cuotas %}
+        <div class="cuota-btn"
+             data-cuota="{{ c_data.cuota.id }}"
+             onclick="addToBetslip(
+               {{ c_data.cuota.id }},
+               '{{ c_data.label }}{% if c_data.sub %} {{ c_data.sub }}{% endif %}',
+               {{ c_data.cuota.valor }},
+               '{{ ev_data.evento.nombre|escapejs }}',
+               '{{ m_data.mercado.tipo }}'
+             )">
+          <div class="qlabel">
+            {{ c_data.label }}
+            {% if c_data.sub %}<small style="opacity:.7;font-size:10px"> {{ c_data.sub }}</small>{% endif %}
+          </div>
+          <div class="qval">{{ c_data.cuota.valor|floatformat:2 }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if not ev_data.mercados %}
+    <p style="color:var(--text-3);font-size:13px;text-align:center;padding:12px">
+      Sin mercados disponibles
+    </p>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="evento-footer">
+      <a href="{% url 'eventos' %}" class="mas-mercados">
+        Ver todos los mercados <i class="fa-solid fa-chevron-right"></i>
+      </a>
+    </div>
+
+  </div>
+</div>

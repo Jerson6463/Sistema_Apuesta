@@ -7,13 +7,10 @@
 <div class="hero">
   <div class="hero-tag"><i class="fa-solid fa-trophy"></i> Mundial 2026 &mdash; Cuotas en tiempo real</div>
   <h1>Las mejores cuotas<br/>del <span>Mundial 2026</span></h1>
-  <p>Apuesta con fichas virtuales en los partidos mas importantes. Simple, combinada y en vivo.</p>
+  <p>Apuesta con fichas virtuales en los partidos más importantes. Simple, combinada y en vivo.</p>
   <div class="hero-btns">
-    <a href="/eventos/" class="btn btn-primary">
+    <a href="{% url 'eventos' %}" class="btn btn-primary">
       <i class="fa-solid fa-futbol"></i> Ver todos los eventos
-    </a>
-    <a href="/registro/" class="btn btn-ghost">
-      <i class="fa-solid fa-user-plus"></i> Crear cuenta gratis
     </a>
   </div>
 </div>
@@ -24,34 +21,28 @@
   <aside class="sidebar-left">
     <div class="sidebar-section">
       <div class="sidebar-title">Deportes</div>
-      <div class="sidebar-item active" onclick="location.href='/eventos/'">
+      <div class="sidebar-item active" onclick="location.href='{% url 'eventos' %}'">
         <i class="fa-solid fa-futbol"></i> Futbol
-        <span class="sidebar-count">3</span>
+        <span class="sidebar-count">{{ eventos|length }}</span>
       </div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">Competiciones</div>
-      <div class="sidebar-item" onclick="location.href='/eventos/'">
+      <div class="sidebar-item" onclick="location.href='{% url 'eventos' %}'">
         <i class="fa-solid fa-earth-americas"></i> Mundial 2026
-        <span class="sidebar-count">3</span>
+        <span class="sidebar-count">{{ eventos|length }}</span>
       </div>
-      <div class="sidebar-item">
-        <i class="fa-solid fa-shield"></i> Liga 1 Peru
-      </div>
-      <div class="sidebar-item">
-        <i class="fa-solid fa-shield"></i> La Liga
-      </div>
-      <div class="sidebar-item">
-        <i class="fa-solid fa-shield"></i> Premier League
-      </div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> Liga 1 Peru</div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> La Liga</div>
+      <div class="sidebar-item"><i class="fa-solid fa-shield"></i> Premier League</div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">Juego Responsable</div>
-      <div class="sidebar-item" onclick="location.href='/wallet/#limites'" style="color:var(--primary)">
-        <i class="fa-solid fa-shield-halved"></i> Mis limites
+      <div class="sidebar-item" onclick="location.href='{% url 'wallet' %}#limites'" style="color:var(--primary)">
+        <i class="fa-solid fa-shield-halved"></i> Mis límites
       </div>
-      <div class="sidebar-item" onclick="location.href='/wallet/#exclusion'" style="color:var(--red-lt)">
-        <i class="fa-solid fa-ban"></i> Autoexclusion
+      <div class="sidebar-item" onclick="location.href='{% url 'wallet' %}#exclusion'" style="color:var(--red-lt)">
+        <i class="fa-solid fa-ban"></i> Autoexclusión
       </div>
     </div>
   </aside>
@@ -60,89 +51,25 @@
   <main class="main-content">
     <div class="section-hdr">
       <h2><i class="fa-solid fa-fire"></i> Eventos destacados</h2>
-      <a href="/eventos/" class="mas-mercados">
+      <a href="{% url 'eventos' %}" class="mas-mercados">
         Ver todos <i class="fa-solid fa-chevron-right"></i>
       </a>
     </div>
-    <div id="eventos-wrap">
-      <div style="text-align:center;padding:60px 0;color:var(--text-3)">
-        <i class="fa-solid fa-spinner fa-spin" style="font-size:28px;display:block;margin-bottom:12px"></i>
-        Cargando eventos...
+
+    {% if eventos %}
+      {% for ev_data in eventos %}
+      {% include "partials/evento_card.html" %}
+      {% endfor %}
+    {% else %}
+      <div class="alert alert-info">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>No hay eventos disponibles en este momento.</span>
       </div>
-    </div>
+    {% endif %}
   </main>
 
   <!-- BETSLIP -->
-  <aside class="sidebar-right">
-    <div class="betslip">
-      <div class="betslip-header">
-        <h3>
-          <i class="fa-solid fa-ticket"></i> Mi Ticket
-          <span class="bs-count" id="bs-count"></span>
-        </h3>
-        <button onclick="betslip=[];saveBetslip();renderBetslip()" style="color:var(--text-3);font-size:12px">
-          Limpiar
-        </button>
-      </div>
-      <div id="bs-body"></div>
-      <div id="bs-foot" style="display:none">
-        <div class="betslip-foot">
-          <div class="bs-row">
-            <span>Cuota total</span>
-            <span class="val" id="bs-odds-total">1.00</span>
-          </div>
-          <input type="number" id="bs-monto" class="bs-monto" placeholder="Monto en S/" min="1" step="1" value="10"/>
-          <div class="bs-row">
-            <span>Ganancia potencial</span>
-            <span class="val green" id="bs-ganancia">S/ 0.00</span>
-          </div>
-          <button class="btn-apostar" id="btn-apostar" onclick="confirmarApuesta()">
-            <i class="fa-solid fa-check"></i> Confirmar Apuesta
-          </button>
-          <p class="bs-legal">
-            <i class="fa-solid fa-shield-halved"></i>
-            Apuesta con responsabilidad. Moneda virtual educativa sin valor real.
-          </p>
-        </div>
-      </div>
-    </div>
-  </aside>
+  {% include "partials/betslip.html" %}
 
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-async function cargarEventos() {
-  const wrap = document.getElementById('eventos-wrap');
-  if (!isLoggedIn()) {
-    wrap.innerHTML = `
-      <div class="alert alert-info">
-        <i class="fa-solid fa-circle-info"></i>
-        <span>Inicia sesion para ver las cuotas en tiempo real.
-          <a href="/login/" style="color:var(--primary);font-weight:700;margin-left:4px">Iniciar sesion</a>
-        </span>
-      </div>`;
-    return;
-  }
-  try {
-    const res = await apiFetch('/api/eventos/');
-    if (!res.ok) throw new Error();
-    const eventos = await res.json();
-    wrap.innerHTML = '';
-    for (const ev of eventos.slice(0, 3)) {
-      const detRes = await apiFetch(`/api/eventos/${ev.id}/`);
-      const det = detRes?.ok ? await detRes.json() : null;
-      const mercados = det?.mercados?.filter(m => ['1X2','over_under','btts'].includes(m.tipo)) || [];
-      const card = buildEventoCard(ev, mercados);
-      wrap.appendChild(card);
-    }
-    marcarCuotasActivas();
-  } catch (e) {
-    wrap.innerHTML = '<div class="alert alert-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Error al cargar eventos.</span></div>';
-  }
-}
-
-cargarEventos();
-</script>
 {% endblock %}

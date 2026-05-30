@@ -1,0 +1,33 @@
+<aside class="sidebar-right">
+  <div class="betslip">
+    <div class="betslip-header">
+      <h3>
+        <i class="fa-solid fa-ticket"></i> Mi Ticket
+        <span class="bs-count" id="bs-count"></span>
+      </h3>
+      <button onclick="limpiarBetslip()" style="color:var(--text-3);font-size:12px">Limpiar</button>
+    </div>
+    <div id="bs-body"></div>
+    <div id="bs-foot" style="display:none">
+      <div class="betslip-foot">
+        <div class="bs-row">
+          <span>Cuota total</span>
+          <span class="val" id="bs-odds-total">1.00</span>
+        </div>
+        <input type="number" id="bs-monto" class="bs-monto"
+               placeholder="Monto en S/" min="1" step="1" value="10"/>
+        <div class="bs-row">
+          <span>Ganancia potencial</span>
+          <span class="val green" id="bs-ganancia">S/ 0.00</span>
+        </div>
+        <button class="btn-apostar" id="btn-apostar" onclick="confirmarApuesta()">
+          <i class="fa-solid fa-check"></i> Confirmar Apuesta
+        </button>
+        <p class="bs-legal">
+          <i class="fa-solid fa-shield-halved"></i>
+          Apuesta con responsabilidad. Moneda virtual educativa sin valor real.
+        </p>
+      </div>
+    </div>
+  </div>
+</aside>

@@ -110,19 +110,25 @@ function buildEquipos(equipo_local, equipo_visitante) {
 function buildFilaCuotas(mercado, eventoNombre, local, visitante) {
   const wrap = document.createElement('div');
 
+  // `sels` acepta múltiples nombres de selección para compatibilidad con eventos
+  // creados antes y después de la estandarización de la BD.
   const CONFIGS = {
     '1X2': [
-      { sel: local,      label: '1 &nbsp; ' + local.substring(0,3).toUpperCase() },
-      { sel: 'empate',   label: 'X &nbsp; Empate' },
-      { sel: visitante,  label: '2 &nbsp; ' + visitante.substring(0,3).toUpperCase() },
+      { sels: ['1', 'local'],              label: '1 &nbsp; ' + local.substring(0,3).toUpperCase(),      nombre: local },
+      { sels: ['empate', 'X', 'x', 'draw'],label: 'X &nbsp; Empate',                                     nombre: 'Empate' },
+      { sels: ['2', 'visitante'],          label: '2 &nbsp; ' + visitante.substring(0,3).toUpperCase(),   nombre: visitante },
     ],
     'over_under': [
-      { sel: 'over',  label: 'Mas de 2.5' },
-      { sel: 'under', label: 'Menos de 2.5' },
+      { sels: ['over',  'over_2.5'],  label: 'Mas de 2.5',    nombre: 'Mas de 2.5' },
+      { sels: ['under', 'under_2.5'], label: 'Menos de 2.5',  nombre: 'Menos de 2.5' },
     ],
     'btts': [
-      { sel: 'si', label: 'Si anotan' },
-      { sel: 'no', label: 'No ambos' },
+      { sels: ['si'], label: 'Si anotan',  nombre: 'Si anotan' },
+      { sels: ['no'], label: 'No ambos',   nombre: 'No ambos' },
+    ],
+    'handicap': [
+      { sels: ['local',     'local_-1'],     label: 'Local &minus;1',  nombre: 'Local -1' },
+      { sels: ['visitante', 'visitante_+1'], label: 'Visit. +1',       nombre: 'Visitante +1' },
     ],
   };
 
@@ -130,6 +136,7 @@ function buildFilaCuotas(mercado, eventoNombre, local, visitante) {
     '1X2':        '<i class="fa-solid fa-chart-simple"></i> 1X2 &mdash; Resultado del partido',
     'over_under': '<i class="fa-solid fa-arrow-up-9-1"></i> Over/Under 2.5 goles',
     'btts':       '<i class="fa-solid fa-arrows-left-right"></i> Ambos equipos anotan',
+    'handicap':   '<i class="fa-solid fa-scale-balanced"></i> Handicap',
   };
 
   const label = document.createElement('div');
@@ -142,10 +149,10 @@ function buildFilaCuotas(mercado, eventoNombre, local, visitante) {
 
   const cfg = CONFIGS[mercado.tipo] || [];
   cfg.forEach(c => {
-    const cuota = mercado.cuotas.find(q => q.seleccion === c.sel);
+    // Busca la cuota probando todos los nombres de selección posibles
+    const cuota = mercado.cuotas.find(q => c.sels.includes(q.seleccion));
     if (cuota) {
-      const nombreSel = c.sel === 'empate' ? 'Empate' : (c.sel === 'over' ? 'Mas de 2.5' : c.sel === 'under' ? 'Menos de 2.5' : c.sel === 'si' ? 'Si anotan' : c.sel === 'no' ? 'No ambos' : c.sel);
-      fila.appendChild(buildCuotaBtn(cuota.id, nombreSel, c.label, cuota.valor, eventoNombre, mercado.tipo));
+      fila.appendChild(buildCuotaBtn(cuota.id, c.nombre, c.label, cuota.valor, eventoNombre, mercado.tipo));
     }
   });
 

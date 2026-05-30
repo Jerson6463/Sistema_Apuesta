@@ -5,21 +5,14 @@
 {% block content %}
 <div class="page-inner">
 
-  <div class="page-title">
-    <i class="fa-solid fa-wallet"></i> Mi Wallet
-  </div>
-  <p class="page-sub">Gestiona tus fichas virtuales, limites y controles de juego responsable</p>
+  <div class="page-title"><i class="fa-solid fa-wallet"></i> Mi Wallet</div>
+  <p class="page-sub">Gestiona tus fichas virtuales, límites y controles de juego responsable</p>
 
-  <!-- BALANCE HERO -->
+  <!-- BALANCE -->
   <div class="balance-hero">
     <div>
-      <div class="balance-label">
-        <i class="fa-solid fa-coins"></i> Saldo disponible
-      </div>
-      <div class="balance-amount" id="bal-disp">S/ --</div>
-      <div class="balance-blocked" id="bal-bloq">
-        <i class="fa-solid fa-lock"></i> Bloqueado en apuestas: S/ --
-      </div>
+      <div class="balance-label"><i class="fa-solid fa-coins"></i> Saldo disponible</div>
+      <div class="balance-amount">S/ {{ saldo|floatformat:2 }}</div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="abrirModal('recargar')">
@@ -31,26 +24,28 @@
     </div>
   </div>
 
-  <!-- STATS -->
+  <!-- STATS MENSUALES -->
   <div class="stats-grid">
     <div class="stat-box">
       <div class="label"><i class="fa-solid fa-arrow-down"></i> Recargado este mes</div>
-      <div class="value c-primary" id="s-recargado">--</div>
+      <div class="value c-primary">S/ {{ total_recargado|floatformat:2 }}</div>
       <div class="sub">fichas virtuales</div>
     </div>
     <div class="stat-box">
       <div class="label"><i class="fa-solid fa-ticket"></i> Apostado este mes</div>
-      <div class="value c-blue" id="s-apostado">--</div>
+      <div class="value c-blue">S/ {{ total_apostado|floatformat:2 }}</div>
       <div class="sub">en apuestas</div>
     </div>
     <div class="stat-box">
       <div class="label"><i class="fa-solid fa-trophy"></i> Ganado este mes</div>
-      <div class="value c-green" id="s-ganado">--</div>
+      <div class="value c-green">S/ {{ total_ganado|floatformat:2 }}</div>
       <div class="sub">en premios</div>
     </div>
     <div class="stat-box">
       <div class="label"><i class="fa-solid fa-scale-balanced"></i> Balance neto</div>
-      <div class="value" id="s-balance">--</div>
+      <div class="value {% if balance_neto >= 0 %}c-green{% else %}c-red{% endif %}">
+        S/ {{ balance_neto|floatformat:2 }}
+      </div>
       <div class="sub">resultado del mes</div>
     </div>
   </div>
@@ -61,66 +56,120 @@
       <i class="fa-solid fa-list"></i> Historial
     </button>
     <button class="tab-btn" id="tab-limites" onclick="cambiarTab('limites')">
-      <i class="fa-solid fa-shield-halved"></i> Limites de Juego
+      <i class="fa-solid fa-shield-halved"></i> Límites de Juego
     </button>
     <button class="tab-btn" id="tab-exclusion" onclick="cambiarTab('exclusion')">
-      <i class="fa-solid fa-ban"></i> Autoexclusion
+      <i class="fa-solid fa-ban"></i> Autoexclusión
     </button>
   </div>
 
-  <!-- PANEL HISTORIAL -->
+  <!-- HISTORIAL (renderizado por Django) -->
   <div id="panel-historial">
     <div class="tbl-wrap">
       <table>
         <thead>
           <tr>
             <th><i class="fa-solid fa-tag"></i> Tipo</th>
-            <th>Direccion</th>
+            <th>Dirección</th>
             <th>Monto</th>
             <th><i class="fa-regular fa-clock"></i> Fecha</th>
           </tr>
         </thead>
-        <tbody id="hist-body">
-          <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-3)">
-            <i class="fa-solid fa-spinner fa-spin"></i> Cargando...
-          </td></tr>
+        <tbody>
+          {% if historial %}
+            {% for entrada in historial %}
+            <tr>
+              <td style="font-weight:500">
+                {% if entrada.tipo_referencia == 'recarga' %}Recarga
+                {% elif entrada.tipo_referencia == 'retiro' %}Retiro
+                {% elif entrada.tipo_referencia == 'apuesta' %}Apuesta
+                {% elif entrada.tipo_referencia == 'pago_ganancia' %}Premio
+                {% elif entrada.tipo_referencia == 'perdida' %}Pérdida
+                {% elif entrada.tipo_referencia == 'devolucion' %}Devolución
+                {% elif entrada.tipo_referencia == 'cash_out' %}Cash-out
+                {% elif entrada.tipo_referencia == 'bono' %}Bono
+                {% else %}{{ entrada.tipo_referencia }}
+                {% endif %}
+              </td>
+              <td>
+                {% if entrada.direccion == 'CREDITO' %}
+                  <span class="badge badge-green"><i class="fa-solid fa-arrow-down"></i> Entrada</span>
+                {% else %}
+                  <span class="badge badge-red"><i class="fa-solid fa-arrow-up"></i> Salida</span>
+                {% endif %}
+              </td>
+              <td style="font-weight:700;font-variant-numeric:tabular-nums;
+                         color:{% if entrada.direccion == 'CREDITO' %}var(--green){% else %}var(--red-lt){% endif %}">
+                {% if entrada.direccion == 'CREDITO' %}+{% else %}-{% endif %}
+                S/ {{ entrada.monto|floatformat:2 }}
+              </td>
+              <td style="color:var(--text-3);font-size:12px">
+                {{ entrada.creado_en|date:"d M Y, H:i" }}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4" style="text-align:center;padding:40px;color:var(--text-3)">
+                <i class="fa-solid fa-inbox" style="font-size:28px;display:block;margin-bottom:8px"></i>
+                Sin movimientos aún
+              </td>
+            </tr>
+          {% endif %}
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- PANEL LIMITES -->
+  <!-- LIMITES (JS carga desde API) -->
   <div id="panel-limites" style="display:none">
     <div class="alert alert-warning">
       <i class="fa-solid fa-triangle-exclamation"></i>
-      <span>Bajar el limite es <strong>inmediato</strong>. Subirlo requiere <strong>24 horas de espera</strong> por seguridad.</span>
+      <span>Bajar el límite es <strong>inmediato</strong>. Subirlo requiere <strong>24 horas</strong> de espera.</span>
     </div>
+    {% if limites %}
+    <div style="display:grid;gap:14px">
+      {% for campo, label, icono in limits_display %}
+      <div class="limit-card">
+        <div class="lc-header">
+          <div class="lc-label"><i class="fa-solid {{ icono }}" style="color:var(--primary)"></i> {{ label }}</div>
+          <div class="lc-value">S/ {{ campo|floatformat:2 }}</div>
+        </div>
+        <div class="limit-input-row">
+          <input type="number" id="inp-{{ campo }}" class="form-control"
+                 value="{{ campo }}" min="1"/>
+          <button class="btn btn-primary btn-sm" onclick="actualizarLimite('{{ campo }}')">
+            <i class="fa-solid fa-check"></i> Actualizar
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
     <div id="limites-wrap">
       <div style="text-align:center;padding:40px;color:var(--text-3)">
-        <i class="fa-solid fa-spinner fa-spin"></i> Cargando limites...
+        <i class="fa-solid fa-spinner fa-spin"></i> Cargando límites...
       </div>
     </div>
+    {% endif %}
   </div>
 
-  <!-- PANEL AUTOEXCLUSION -->
+  <!-- AUTOEXCLUSION -->
   <div id="panel-exclusion" style="display:none">
     <div class="alert alert-danger">
       <i class="fa-solid fa-ban"></i>
-      <span>La autoexclusion es <strong>irreversible antes del plazo elegido</strong>. No podras apostar durante ese periodo.</span>
+      <span>La autoexclusión es <strong>irreversible antes del plazo elegido</strong>.</span>
     </div>
-    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Selecciona el periodo de autoexclusion:</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Selecciona el periodo:</div>
     <div class="excl-grid">
       <div class="excl-card" onclick="solicitarExclusion('temporal_7')">
-        <div class="ec-num">7</div>
-        <div class="ec-unit">dias</div>
+        <div class="ec-num">7</div><div class="ec-unit">días</div>
       </div>
       <div class="excl-card" onclick="solicitarExclusion('temporal_30')">
-        <div class="ec-num">30</div>
-        <div class="ec-unit">dias</div>
+        <div class="ec-num">30</div><div class="ec-unit">días</div>
       </div>
       <div class="excl-card" onclick="solicitarExclusion('temporal_90')">
-        <div class="ec-num">90</div>
-        <div class="ec-unit">dias</div>
+        <div class="ec-num">90</div><div class="ec-unit">días</div>
       </div>
       <div class="excl-card danger" onclick="solicitarExclusion('indefinida')">
         <div class="ec-num" style="color:var(--red-lt)">Indef.</div>
@@ -128,17 +177,11 @@
       </div>
     </div>
     <div id="excl-status" style="margin-top:16px"></div>
-    <div style="margin-top:24px">
-      <div style="font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:12px">
-        <i class="fa-solid fa-clock-rotate-left"></i> Historial de autoexclusiones
-      </div>
-      <div id="excl-historial" style="color:var(--text-3);font-size:13px">Cargando...</div>
-    </div>
   </div>
 
 </div>
 
-<!-- MODAL OPERACION -->
+<!-- MODAL RECARGAR / RETIRAR -->
 <div class="modal-bg" id="modal-op" style="display:none" onclick="if(event.target===this)cerrarModal()">
   <div class="modal-box">
     <h3 id="modal-title">Recargar fichas</h3>
@@ -162,164 +205,23 @@
 <script>
 let opActual = '';
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (!isLoggedIn()) { window.location.href = '/login/'; return; }
-  cargarSaldo(); cargarResumen(); cargarHistorial();
-});
-
-async function cargarSaldo() {
-  const res = await apiFetch('/api/wallet/saldo/');
-  if (!res?.ok) return;
-  const d = await res.json();
-  document.getElementById('bal-disp').textContent = `S/ ${parseFloat(d.saldo_disponible).toFixed(2)}`;
-  document.getElementById('bal-bloq').innerHTML =
-    `<i class="fa-solid fa-lock"></i> Bloqueado en apuestas: S/ ${parseFloat(d.saldo_bloqueado||0).toFixed(2)}`;
-  const nav = document.getElementById('nav-balance-val');
-  if (nav) nav.textContent = `S/ ${parseFloat(d.saldo_disponible).toFixed(2)}`;
-}
-
-async function cargarResumen() {
-  const n = new Date();
-  const res = await apiFetch(`/api/wallet/resumen/?mes=${n.getMonth()+1}&anio=${n.getFullYear()}`);
-  if (!res?.ok) return;
-  const d = await res.json();
-  document.getElementById('s-recargado').textContent = `S/ ${parseFloat(d.total_recargado).toFixed(2)}`;
-  document.getElementById('s-apostado').textContent  = `S/ ${parseFloat(d.total_apostado).toFixed(2)}`;
-  document.getElementById('s-ganado').textContent    = `S/ ${parseFloat(d.total_ganado).toFixed(2)}`;
-  const bal = parseFloat(d.balance_neto);
-  const el  = document.getElementById('s-balance');
-  el.textContent = `S/ ${bal.toFixed(2)}`;
-  el.className = `value ${bal>=0?'c-green':'c-red'}`;
-}
-
-async function cargarHistorial() {
-  const res = await apiFetch('/api/wallet/historial/');
-  if (!res?.ok) return;
-  const datos = await res.json();
-  const tbody = document.getElementById('hist-body');
-  if (!datos.length) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-3)">
-      <i class="fa-solid fa-inbox" style="font-size:28px;display:block;margin-bottom:8px"></i>
-      Sin movimientos aun
-    </td></tr>`;
-    return;
-  }
-  const tipos = {
-    recarga:'Recarga', retiro:'Retiro', apuesta:'Apuesta',
-    pago_ganancia:'Premio', perdida:'Perdida', devolucion:'Devolucion',
-    cash_out:'Cash-out', bono:'Bono'
-  };
-  tbody.innerHTML = datos.map(e => {
-    const esCred = e.direccion === 'CREDITO';
-    return `<tr>
-      <td style="font-weight:500">${tipos[e.tipo_referencia]||e.tipo_referencia}</td>
-      <td>
-        <span class="badge ${esCred?'badge-green':'badge-red'}">
-          <i class="fa-solid fa-arrow-${esCred?'down':'up'}"></i>
-          ${esCred?'Entrada':'Salida'}
-        </span>
-      </td>
-      <td style="font-weight:700;font-variant-numeric:tabular-nums;color:${esCred?'var(--green)':'var(--red-lt)'}">
-        ${esCred?'+':'-'} S/ ${parseFloat(e.monto).toFixed(2)}
-      </td>
-      <td style="color:var(--text-3);font-size:12px">${new Date(e.creado_en).toLocaleString('es-PE')}</td>
-    </tr>`;
-  }).join('');
-}
-
-async function cargarLimites() {
-  const res = await apiFetch('/api/usuarios/limites/');
-  if (!res?.ok) return;
-  const d = await res.json();
-  const campos = [
-    { key:'limite_diario',   label:'Limite diario',   icon:'fa-sun' },
-    { key:'limite_semanal',  label:'Limite semanal',  icon:'fa-calendar-week' },
-    { key:'limite_mensual',  label:'Limite mensual',  icon:'fa-calendar' },
-  ];
-  document.getElementById('limites-wrap').innerHTML = campos.map(c => `
-    <div class="limit-card">
-      <div class="lc-header">
-        <div class="lc-label">
-          <i class="fa-solid ${c.icon}" style="color:var(--primary)"></i> ${c.label}
-        </div>
-        <div class="lc-value">S/ ${parseFloat(d[c.key]).toFixed(2)}</div>
-      </div>
-      <div class="limit-input-row">
-        <input type="number" id="inp-${c.key}" class="form-control" value="${parseFloat(d[c.key]).toFixed(0)}" min="1"/>
-        <button class="btn btn-primary btn-sm" onclick="actualizarLimite('${c.key}')">
-          <i class="fa-solid fa-check"></i> Actualizar
-        </button>
-      </div>
-    </div>`).join('');
-}
-
-async function actualizarLimite(campo) {
-  const val = document.getElementById(`inp-${campo}`).value;
-  const res = await apiFetch('/api/usuarios/limites/', {
-    method:'PATCH', body: JSON.stringify({ [campo]: parseFloat(val).toFixed(4) })
-  });
-  const d = await res.json();
-  if (res.ok) { toast('Limite actualizado correctamente', 'success'); cargarLimites(); }
-  else toast(d[campo]?.[0] || d.detail || 'Error al actualizar', 'error');
-}
-
-async function cargarExclusiones() {
-  const res = await apiFetch('/api/usuarios/autoexclusiones/');
-  if (!res?.ok) return;
-  const lista = await res.json();
-  const el = document.getElementById('excl-historial');
-  if (!lista.length) { el.textContent = 'Sin autoexclusiones registradas.'; return; }
-  el.innerHTML = lista.map(e => `
-    <div style="background:var(--bg-hover);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <span style="font-weight:600">${e.tipo}</span>
-        <span style="color:var(--text-3);font-size:12px;margin-left:10px">
-          Inicio: ${new Date(e.fecha_inicio).toLocaleDateString('es-PE')}
-        </span>
-      </div>
-      <span class="badge ${e.esta_activa?'badge-red':'badge-gray'}">
-        ${e.esta_activa?'Activa':'Finalizada'}
-      </span>
-    </div>`).join('');
-}
-
-async function solicitarExclusion(tipo) {
-  const labels = { temporal_7:'7 dias', temporal_30:'30 dias', temporal_90:'90 dias', indefinida:'indefinida' };
-  if (!confirm(`Confirmas la autoexclusion ${labels[tipo]}?\nEsta accion no se puede revertir antes del plazo.`)) return;
-  const res = await apiFetch('/api/usuarios/autoexclusion/', { method:'POST', body:JSON.stringify({ tipo }) });
-  const d = await res.json();
-  if (res.ok) {
-    document.getElementById('excl-status').innerHTML = `
-      <div class="form-success">
-        <i class="fa-solid fa-circle-check"></i>
-        <span>Autoexclusion ${labels[tipo]} activada.
-          ${d.fecha_fin ? 'Hasta: ' + new Date(d.fecha_fin).toLocaleDateString('es-PE') : 'Sin fecha de fin.'}
-        </span>
-      </div>`;
-    toast('Autoexclusion activada', 'success');
-    setTimeout(() => window.location.href = '/login/', 2000);
-  } else toast(d.detail || d.tipo?.[0] || 'Error', 'error');
-}
-
 function cambiarTab(tab) {
   ['historial','limites','exclusion'].forEach(t => {
-    document.getElementById(`panel-${t}`).style.display = t===tab ? 'block' : 'none';
-    document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
+    document.getElementById(`panel-${t}`).style.display = t === tab ? 'block' : 'none';
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
   });
-  if (tab==='limites')   cargarLimites();
-  if (tab==='exclusion') cargarExclusiones();
+  if (tab === 'limites') cargarLimites();
 }
 
 function abrirModal(op) {
   opActual = op;
-  document.getElementById('modal-title').textContent = op==='recargar' ? 'Recargar fichas' : 'Retirar fichas';
-  document.getElementById('modal-desc').textContent  = op==='recargar'
-    ? 'Las fichas son virtuales sin valor real. Limite diario: S/ 500.'
+  document.getElementById('modal-title').textContent = op === 'recargar' ? 'Recargar fichas' : 'Retirar fichas';
+  document.getElementById('modal-desc').textContent  = op === 'recargar'
+    ? 'Las fichas son virtuales sin valor real. Límite diario: S/ 500.'
     : 'Retira fichas disponibles de tu wallet virtual.';
-  document.getElementById('modal-btn').innerHTML =
-    op==='recargar'
-      ? '<i class="fa-solid fa-plus"></i> Recargar'
-      : '<i class="fa-solid fa-arrow-up-from-bracket"></i> Retirar';
+  document.getElementById('modal-btn').innerHTML = op === 'recargar'
+    ? '<i class="fa-solid fa-plus"></i> Recargar'
+    : '<i class="fa-solid fa-arrow-up-from-bracket"></i> Retirar';
   document.getElementById('modal-monto').value = '';
   document.getElementById('modal-err').style.display = 'none';
   document.getElementById('modal-op').style.display  = 'flex';
@@ -332,34 +234,87 @@ async function ejecutarOperacion() {
   const errEl = document.getElementById('modal-err');
   errEl.style.display = 'none';
   if (!monto || monto <= 0) {
-    document.getElementById('modal-err-txt').textContent = 'Ingresa un monto valido';
+    document.getElementById('modal-err-txt').textContent = 'Ingresa un monto válido';
     errEl.style.display = 'flex'; return;
   }
-  const endpoint = opActual==='recargar' ? '/api/wallet/recargar/' : '/api/wallet/retirar/';
+  const endpoint = opActual === 'recargar' ? '/api/wallet/recargar/' : '/api/wallet/retirar/';
   const btn = document.getElementById('modal-btn');
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
   try {
     const res = await apiFetch(endpoint, {
-      method:'POST', body: JSON.stringify({ monto: monto.toFixed(4), id_transaccion: crypto.randomUUID() })
+      method: 'POST',
+      body: JSON.stringify({ monto: monto.toFixed(4), id_transaccion: crypto.randomUUID() })
     });
     const d = await res.json();
     if (res.ok) {
       cerrarModal();
-      toast(`${opActual==='recargar'?'Recarga':'Retiro'} exitoso: S/ ${monto.toFixed(2)}`, 'success');
-      cargarSaldo(); cargarResumen(); cargarHistorial();
+      toast(`${opActual === 'recargar' ? 'Recarga' : 'Retiro'} exitoso: S/ ${monto.toFixed(2)}`, 'success');
+      setTimeout(() => location.reload(), 1200);
     } else {
-      document.getElementById('modal-err-txt').textContent = d.error || d.detail || 'Error en la operacion';
+      document.getElementById('modal-err-txt').textContent = d.error || d.detail || 'Error en la operación';
       errEl.style.display = 'flex';
     }
   } catch {
-    document.getElementById('modal-err-txt').textContent = 'Error de conexion';
+    document.getElementById('modal-err-txt').textContent = 'Error de conexión';
     errEl.style.display = 'flex';
   } finally {
     btn.disabled = false;
-    btn.innerHTML = opActual==='recargar'
+    btn.innerHTML = opActual === 'recargar'
       ? '<i class="fa-solid fa-plus"></i> Recargar'
       : '<i class="fa-solid fa-arrow-up-from-bracket"></i> Retirar';
   }
+}
+
+async function cargarLimites() {
+  const wrap = document.getElementById('limites-wrap');
+  const res = await apiFetch('/api/usuarios/limites/');
+  if (!res?.ok) return;
+  const d = await res.json();
+  const campos = [
+    { key: 'limite_diario',   label: 'Límite diario',   icon: 'fa-sun' },
+    { key: 'limite_semanal',  label: 'Límite semanal',  icon: 'fa-calendar-week' },
+    { key: 'limite_mensual',  label: 'Límite mensual',  icon: 'fa-calendar' },
+  ];
+  if (wrap) wrap.innerHTML = campos.map(c => `
+    <div class="limit-card">
+      <div class="lc-header">
+        <div class="lc-label"><i class="fa-solid ${c.icon}" style="color:var(--primary)"></i> ${c.label}</div>
+        <div class="lc-value">S/ ${parseFloat(d[c.key]).toFixed(2)}</div>
+      </div>
+      <div class="limit-input-row">
+        <input type="number" id="inp-${c.key}" class="form-control"
+               value="${parseFloat(d[c.key]).toFixed(0)}" min="1"/>
+        <button class="btn btn-primary btn-sm" onclick="actualizarLimite('${c.key}')">
+          <i class="fa-solid fa-check"></i> Actualizar
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+async function actualizarLimite(campo) {
+  const val = document.getElementById(`inp-${campo}`).value;
+  const res = await apiFetch('/api/usuarios/limites/', {
+    method: 'PATCH', body: JSON.stringify({ [campo]: parseFloat(val).toFixed(4) })
+  });
+  const d = await res.json();
+  if (res.ok) { toast('Límite actualizado correctamente', 'success'); cargarLimites(); }
+  else toast(d[campo]?.[0] || d.detail || 'Error al actualizar', 'error');
+}
+
+async function solicitarExclusion(tipo) {
+  const labels = { temporal_7:'7 días', temporal_30:'30 días', temporal_90:'90 días', indefinida:'indefinida' };
+  if (!confirm(`¿Confirmas la autoexclusión ${labels[tipo]}?\nEsta acción no se puede revertir antes del plazo.`)) return;
+  const res = await apiFetch('/api/usuarios/autoexclusion/', { method: 'POST', body: JSON.stringify({ tipo }) });
+  const d = await res.json();
+  if (res.ok) {
+    document.getElementById('excl-status').innerHTML = `
+      <div class="form-success">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>Autoexclusión ${labels[tipo]} activada.</span>
+      </div>`;
+    toast('Autoexclusión activada', 'success');
+    setTimeout(() => window.location.href = '/logout/', 2000);
+  } else toast(d.detail || d.tipo?.[0] || 'Error', 'error');
 }
 </script>
 {% endblock %}

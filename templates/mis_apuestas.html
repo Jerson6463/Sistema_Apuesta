@@ -7,7 +7,7 @@
 
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px">
     <div class="page-title"><i class="fa-solid fa-ticket"></i> Mis Apuestas</div>
-    <a href="/eventos/" class="btn btn-primary btn-sm">
+    <a href="{% url 'eventos' %}" class="btn btn-primary btn-sm">
       <i class="fa-solid fa-plus"></i> Nueva apuesta
     </a>
   </div>
@@ -17,49 +17,57 @@
   <div class="stats-grid">
     <div class="stat-box">
       <div class="label"><i class="fa-solid fa-list"></i> Total</div>
-      <div class="value" id="st-total">--</div>
+      <div class="value">{{ stats.total }}</div>
     </div>
     <div class="stat-box">
       <div class="label"><i class="fa-solid fa-check"></i> Ganadas</div>
-      <div class="value c-green" id="st-ganadas">--</div>
+      <div class="value c-green">{{ stats.ganadas }}</div>
     </div>
     <div class="stat-box">
       <div class="label"><i class="fa-solid fa-xmark"></i> Perdidas</div>
-      <div class="value c-red" id="st-perdidas">--</div>
+      <div class="value c-red">{{ stats.perdidas }}</div>
     </div>
     <div class="stat-box">
       <div class="label"><i class="fa-regular fa-clock"></i> Pendientes</div>
-      <div class="value c-primary" id="st-pendientes">--</div>
+      <div class="value c-primary">{{ stats.pendientes }}</div>
     </div>
   </div>
 
-  <!-- FILTROS -->
+  <!-- FILTROS (links Django) -->
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-    <button class="btn btn-ghost btn-sm active" id="fl-todas"    onclick="filtrar('todas',this)">Todas</button>
-    <button class="btn btn-ghost btn-sm"        id="fl-aceptada" onclick="filtrar('aceptada',this)">
+    <a href="{% url 'mis_apuestas' %}"
+       class="btn btn-ghost btn-sm {% if not estado_filtro %}active{% endif %}">
+      Todas
+    </a>
+    <a href="{% url 'mis_apuestas' %}?estado=aceptada"
+       class="btn btn-ghost btn-sm {% if estado_filtro == 'aceptada' %}active{% endif %}">
       <i class="fa-regular fa-clock"></i> Pendientes
-    </button>
-    <button class="btn btn-ghost btn-sm"        id="fl-ganada"   onclick="filtrar('ganada',this)">
+    </a>
+    <a href="{% url 'mis_apuestas' %}?estado=ganada"
+       class="btn btn-ghost btn-sm {% if estado_filtro == 'ganada' %}active{% endif %}">
       <i class="fa-solid fa-check"></i> Ganadas
-    </button>
-    <button class="btn btn-ghost btn-sm"        id="fl-perdida"  onclick="filtrar('perdida',this)">
+    </a>
+    <a href="{% url 'mis_apuestas' %}?estado=perdida"
+       class="btn btn-ghost btn-sm {% if estado_filtro == 'perdida' %}active{% endif %}">
       <i class="fa-solid fa-xmark"></i> Perdidas
-    </button>
-    <button class="btn btn-ghost btn-sm"        id="fl-anulada"  onclick="filtrar('anulada',this)">
+    </a>
+    <a href="{% url 'mis_apuestas' %}?estado=anulada"
+       class="btn btn-ghost btn-sm {% if estado_filtro == 'anulada' %}active{% endif %}">
       <i class="fa-solid fa-rotate-left"></i> Anuladas
-    </button>
-    <button class="btn btn-ghost btn-sm"        id="fl-cash_out" onclick="filtrar('cash_out',this)">
+    </a>
+    <a href="{% url 'mis_apuestas' %}?estado=cash_out"
+       class="btn btn-ghost btn-sm {% if estado_filtro == 'cash_out' %}active{% endif %}">
       <i class="fa-solid fa-sack-dollar"></i> Cash-out
-    </button>
+    </a>
   </div>
 
-  <!-- TABLA -->
+  <!-- TABLA (renderizada por Django) -->
   <div class="tbl-wrap">
     <table>
       <thead>
         <tr>
           <th>Evento</th>
-          <th>Seleccion</th>
+          <th>Selección</th>
           <th>Mercado</th>
           <th>Cuota</th>
           <th>Monto</th>
@@ -69,11 +77,62 @@
           <th></th>
         </tr>
       </thead>
-      <tbody id="apuestas-body">
-        <tr><td colspan="9" style="text-align:center;padding:48px;color:var(--text-3)">
-          <i class="fa-solid fa-spinner fa-spin" style="font-size:22px;display:block;margin-bottom:10px"></i>
-          Cargando apuestas...
-        </td></tr>
+      <tbody>
+        {% if apuestas %}
+          {% for a in apuestas %}
+          <tr>
+            <td style="max-width:180px">
+              <div style="font-weight:600;font-size:13px;line-height:1.4">
+                {{ a.cuota.mercado.evento.nombre }}
+              </div>
+            </td>
+            <td style="font-weight:700">{{ a.cuota.seleccion }}</td>
+            <td style="color:var(--text-2);font-size:13px">{{ a.cuota.mercado.get_tipo_display }}</td>
+            <td style="font-weight:700;color:var(--primary)">@ {{ a.cuota_al_apostar|floatformat:2 }}</td>
+            <td style="font-variant-numeric:tabular-nums">S/ {{ a.monto_apostado|floatformat:2 }}</td>
+            <td style="font-variant-numeric:tabular-nums;font-weight:600;
+                       color:{% if a.estado == 'ganada' %}var(--green){% else %}inherit{% endif %}">
+              S/ {{ a.pago_potencial|floatformat:2 }}
+            </td>
+            <td>
+              {% if a.estado == 'aceptada' %}
+                <span class="badge badge-yellow"><i class="fa-regular fa-clock"></i> Pendiente</span>
+              {% elif a.estado == 'ganada' %}
+                <span class="badge badge-green"><i class="fa-solid fa-check"></i> Ganada</span>
+              {% elif a.estado == 'perdida' %}
+                <span class="badge badge-red"><i class="fa-solid fa-xmark"></i> Perdida</span>
+              {% elif a.estado == 'anulada' %}
+                <span class="badge badge-gray"><i class="fa-solid fa-rotate-left"></i> Anulada</span>
+              {% elif a.estado == 'cash_out' %}
+                <span class="badge badge-blue"><i class="fa-solid fa-sack-dollar"></i> Cash-out</span>
+              {% else %}
+                <span class="badge">{{ a.estado }}</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--text-3);font-size:12px;white-space:nowrap">
+              {{ a.creado_en|date:"d M, H:i" }}
+            </td>
+            <td>
+              {% if a.estado == 'aceptada' %}
+              <button class="btn btn-ghost btn-xs"
+                      onclick="abrirCO('{{ a.id }}', {{ a.monto_apostado }}, {{ a.cuota_al_apostar }}, '{{ a.cuota.seleccion|escapejs }}', '{{ a.cuota.mercado.evento.nombre|escapejs }}')">
+                <i class="fa-solid fa-sack-dollar"></i> Cash-out
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="9" style="text-align:center;padding:56px">
+              <i class="fa-solid fa-ticket" style="font-size:36px;color:var(--border-2);display:block;margin-bottom:12px"></i>
+              <div style="font-size:15px;font-weight:600;margin-bottom:8px;color:var(--text-2)">
+                No hay apuestas aún
+              </div>
+              <a href="{% url 'eventos' %}" class="btn btn-primary btn-sm">Ver eventos</a>
+            </td>
+          </tr>
+        {% endif %}
       </tbody>
     </table>
   </div>
@@ -84,8 +143,9 @@
 <div class="modal-bg" id="modal-co" style="display:none" onclick="if(event.target===this)cerrarCO()">
   <div class="modal-box">
     <h3><i class="fa-solid fa-sack-dollar" style="color:var(--primary)"></i> Cash-out anticipado</h3>
-    <p>Cierra tu apuesta ahora y recibe un monto calculado segun la cuota actual. Esta accion es <strong>irreversible</strong>.</p>
-    <div id="co-detalle" style="background:var(--bg-hover);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-size:14px;margin-bottom:4px"></div>
+    <p>Cierra tu apuesta ahora. Esta acción es <strong>irreversible</strong>.</p>
+    <div id="co-detalle" style="background:var(--bg-hover);border:1px solid var(--border);
+                                border-radius:var(--radius);padding:16px;font-size:14px;margin-bottom:4px"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="cerrarCO()">Cancelar</button>
       <button class="btn btn-primary" id="btn-co" onclick="ejecutarCO()">
@@ -98,85 +158,10 @@
 
 {% block extra_js %}
 <script>
-let todas = [];
 let apuestaActiva = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (!isLoggedIn()) { window.location.href = '/login/'; return; }
-  cargarApuestas();
-});
-
-async function cargarApuestas() {
-  const res = await apiFetch('/api/apuestas/mis-apuestas/');
-  if (!res?.ok) return;
-  todas = await res.json();
-  calcStats();
-  render(todas);
-}
-
-function calcStats() {
-  document.getElementById('st-total').textContent     = todas.length;
-  document.getElementById('st-ganadas').textContent   = todas.filter(a=>a.estado==='ganada').length;
-  document.getElementById('st-perdidas').textContent  = todas.filter(a=>a.estado==='perdida').length;
-  document.getElementById('st-pendientes').textContent= todas.filter(a=>a.estado==='aceptada').length;
-}
-
-function render(lista) {
-  const tbody = document.getElementById('apuestas-body');
-  if (!lista.length) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:56px">
-      <i class="fa-solid fa-ticket" style="font-size:36px;color:var(--border-2);display:block;margin-bottom:12px"></i>
-      <div style="font-size:15px;font-weight:600;margin-bottom:8px;color:var(--text-2)">No hay apuestas aun</div>
-      <a href="/eventos/" class="btn btn-primary btn-sm">Ver eventos</a>
-    </td></tr>`;
-    return;
-  }
-
-  const badges = {
-    aceptada: `<span class="badge badge-yellow"><i class="fa-regular fa-clock"></i> Pendiente</span>`,
-    ganada:   `<span class="badge badge-green"><i class="fa-solid fa-check"></i> Ganada</span>`,
-    perdida:  `<span class="badge badge-red"><i class="fa-solid fa-xmark"></i> Perdida</span>`,
-    anulada:  `<span class="badge badge-gray"><i class="fa-solid fa-rotate-left"></i> Anulada</span>`,
-    cash_out: `<span class="badge badge-blue"><i class="fa-solid fa-sack-dollar"></i> Cash-out</span>`,
-  };
-
-  tbody.innerHTML = lista.map(a => {
-    const fecha = new Date(a.creado_en).toLocaleString('es-PE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    const monto = parseFloat(a.monto_apostado).toFixed(2);
-    const pot   = parseFloat(a.pago_potencial).toFixed(2);
-    const cuota = parseFloat(a.cuota_al_apostar).toFixed(2);
-    return `<tr>
-      <td style="max-width:180px">
-        <div style="font-weight:600;font-size:13px;line-height:1.4">${a.evento}</div>
-      </td>
-      <td style="font-weight:700">${a.seleccion}</td>
-      <td style="color:var(--text-2);font-size:13px">${a.mercado}</td>
-      <td style="font-weight:700;color:var(--primary)">@ ${cuota}</td>
-      <td style="font-variant-numeric:tabular-nums">S/ ${monto}</td>
-      <td style="font-variant-numeric:tabular-nums;font-weight:600;color:${a.estado==='ganada'?'var(--green)':'inherit'}">
-        S/ ${pot}
-      </td>
-      <td>${badges[a.estado] || a.estado}</td>
-      <td style="color:var(--text-3);font-size:12px;white-space:nowrap">${fecha}</td>
-      <td>
-        ${a.estado==='aceptada'
-          ? `<button class="btn btn-ghost btn-xs" onclick="abrirCO('${a.id}',${a.monto_apostado},${a.cuota_al_apostar},'${a.seleccion}','${a.evento.replace(/'/g,"\\'")}')">
-               <i class="fa-solid fa-sack-dollar"></i> Cash-out
-             </button>`
-          : ''}
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-function filtrar(estado, btn) {
-  document.querySelectorAll('[id^="fl-"]').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  render(estado==='todas' ? todas : todas.filter(a=>a.estado===estado));
-}
-
 function abrirCO(id, monto, cuota, sel, evento) {
-  apuestaActiva = { id, monto:parseFloat(monto), cuota:parseFloat(cuota) };
+  apuestaActiva = { id, monto: parseFloat(monto), cuota: parseFloat(cuota) };
   const est = (parseFloat(monto) * 0.90).toFixed(2);
   document.getElementById('co-detalle').innerHTML = `
     <div style="display:grid;gap:8px">
@@ -185,7 +170,7 @@ function abrirCO(id, monto, cuota, sel, evento) {
         <span style="font-weight:600;text-align:right;max-width:260px">${evento}</span>
       </div>
       <div style="display:flex;justify-content:space-between">
-        <span style="color:var(--text-2)">Seleccion</span>
+        <span style="color:var(--text-2)">Selección</span>
         <span style="font-weight:600">${sel}</span>
       </div>
       <div style="display:flex;justify-content:space-between">
@@ -193,12 +178,11 @@ function abrirCO(id, monto, cuota, sel, evento) {
         <span style="font-weight:700">S/ ${parseFloat(monto).toFixed(2)}</span>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;align-items:center">
-        <span style="color:var(--text-2)">Recibiras aprox.</span>
+        <span style="color:var(--text-2)">Recibirás aprox.</span>
         <span style="font-size:22px;font-weight:900;color:var(--primary)">S/ ${est}</span>
       </div>
       <div style="font-size:11px;color:var(--text-3)">
-        <i class="fa-solid fa-circle-info"></i>
-        Factor casa 90% aplicado. El monto exacto depende de la cuota actual al momento de confirmar.
+        <i class="fa-solid fa-circle-info"></i> Factor casa 90% aplicado.
       </div>
     </div>`;
   document.getElementById('modal-co').style.display = 'flex';
@@ -212,17 +196,20 @@ async function ejecutarCO() {
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...';
   try {
     const res = await apiFetch('/api/apuestas/cash-out/', {
-      method:'POST', body: JSON.stringify({ apuesta_id: apuestaActiva.id, factor_casa:'0.9000' })
+      method: 'POST',
+      body: JSON.stringify({ apuesta_id: apuestaActiva.id, factor_casa: '0.9000' })
     });
     const d = await res.json();
     if (res.ok) {
       cerrarCO();
       toast(`Cash-out exitoso. Recibiste: S/ ${parseFloat(d.monto_recibido).toFixed(2)}`, 'success');
-      cargarApuestas();
-      actualizarSaldo();
-    } else toast(d.error || 'Error en cash-out', 'error');
-  } catch { toast('Error de conexion', 'error'); }
-  finally {
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      toast(d.error || 'Error en cash-out', 'error');
+    }
+  } catch {
+    toast('Error de conexión', 'error');
+  } finally {
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar Cash-out';
   }

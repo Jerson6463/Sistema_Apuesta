@@ -10,134 +10,89 @@
     </div>
 
     <h2>Crear Cuenta</h2>
-    <p class="subtitle">Registrate gratis y recibe 500 fichas virtuales de bienvenida</p>
+    <p class="subtitle">Regístrate gratis y empieza a apostar con fichas virtuales</p>
 
-    <div id="msg-error" class="form-error" style="display:none">
-      <i class="fa-solid fa-circle-xmark"></i>
-      <span id="error-text"></span>
-    </div>
-    <div id="msg-ok" class="form-success" style="display:none">
-      <i class="fa-solid fa-circle-check"></i>
-      <span id="ok-text"></span>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Nombre</label>
-        <input id="f-nombre" type="text" class="form-control" placeholder="Tu nombre"/>
+    {% if errores %}
+    <div class="form-error" style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+      <div style="display:flex;align-items:center;gap:8px;font-weight:700">
+        <i class="fa-solid fa-circle-xmark"></i> Corrige los siguientes errores:
       </div>
-      <div class="form-group">
-        <label class="form-label">Apellido</label>
-        <input id="f-apellido" type="text" class="form-control" placeholder="Tu apellido"/>
+      {% for campo, msgs in errores.items %}
+        {% for msg in msgs %}
+          <div style="font-size:13px;padding-left:20px">• {{ campo }}: {{ msg }}</div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'registro' %}">
+      {% csrf_token %}
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre</label>
+          <input name="first_name" type="text" class="form-control" placeholder="Tu nombre"
+                 value="{{ request.POST.first_name }}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellido</label>
+          <input name="last_name" type="text" class="form-control" placeholder="Tu apellido"
+                 value="{{ request.POST.last_name }}"/>
+        </div>
       </div>
-    </div>
 
-    <div class="form-group">
-      <label class="form-label"><i class="fa-solid fa-user"></i> Usuario</label>
-      <input id="f-username" type="text" class="form-control" placeholder="Nombre de usuario unico"/>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label"><i class="fa-solid fa-envelope"></i> Correo electronico</label>
-      <input id="f-email" type="email" class="form-control" placeholder="correo@ejemplo.com"/>
-    </div>
-
-    <div class="form-row">
       <div class="form-group">
-        <label class="form-label"><i class="fa-solid fa-id-card"></i> DNI peruano</label>
-        <input id="f-dni" type="text" class="form-control" placeholder="12345678" maxlength="8"/>
-        <div class="form-hint"><i class="fa-solid fa-circle-info"></i> 8 digitos numericos</div>
+        <label class="form-label"><i class="fa-solid fa-user"></i> Usuario</label>
+        <input name="username" type="text" class="form-control" placeholder="Nombre de usuario único"
+               value="{{ request.POST.username }}" required/>
       </div>
-      <div class="form-group">
-        <label class="form-label"><i class="fa-solid fa-calendar"></i> Fecha de nacimiento</label>
-        <input id="f-fecha" type="date" class="form-control"/>
-        <div class="form-hint"><i class="fa-solid fa-circle-info"></i> Debes ser mayor de 18 anos</div>
-      </div>
-    </div>
 
-    <div class="form-row">
       <div class="form-group">
-        <label class="form-label"><i class="fa-solid fa-lock"></i> Contrasena</label>
-        <input id="f-pass" type="password" class="form-control" placeholder="Minimo 8 caracteres"/>
+        <label class="form-label"><i class="fa-solid fa-envelope"></i> Correo electrónico</label>
+        <input name="email" type="email" class="form-control" placeholder="correo@ejemplo.com"
+               value="{{ request.POST.email }}" required/>
       </div>
-      <div class="form-group">
-        <label class="form-label"><i class="fa-solid fa-lock"></i> Confirmar</label>
-        <input id="f-pass2" type="password" class="form-control" placeholder="Repetir contrasena"/>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-id-card"></i> DNI peruano</label>
+          <input name="dni" type="text" class="form-control" placeholder="12345678" maxlength="8"
+                 value="{{ request.POST.dni }}" required/>
+          <div class="form-hint"><i class="fa-solid fa-circle-info"></i> 8 dígitos numéricos</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-calendar"></i> Fecha de nacimiento</label>
+          <input name="fecha_nacimiento" type="date" class="form-control"
+                 value="{{ request.POST.fecha_nacimiento }}" required/>
+          <div class="form-hint"><i class="fa-solid fa-circle-info"></i> Debes ser mayor de 18 años</div>
+        </div>
       </div>
-    </div>
 
-    <div class="alert alert-warning" style="margin-bottom:14px">
-      <i class="fa-solid fa-shield-halved"></i>
-      <span>El sistema valida tu edad con el DNI. Solo mayores de 18 anos pueden registrarse.</span>
-    </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-lock"></i> Contraseña</label>
+          <input name="password" type="password" class="form-control" placeholder="Mínimo 8 caracteres" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-lock"></i> Confirmar</label>
+          <input name="password2" type="password" class="form-control" placeholder="Repetir contraseña" required/>
+        </div>
+      </div>
 
-    <button class="btn btn-primary btn-full" id="btn-reg" onclick="doRegistro()">
-      <i class="fa-solid fa-user-plus"></i> Crear cuenta gratis
-    </button>
+      <div class="alert alert-warning" style="margin-bottom:14px">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>El sistema valida tu edad con el DNI. Solo mayores de 18 años pueden registrarse.</span>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full">
+        <i class="fa-solid fa-user-plus"></i> Crear cuenta gratis
+      </button>
+    </form>
 
     <div class="form-footer">
-      Ya tienes cuenta? <a href="/login/">Iniciar sesion</a>
+      ¿Ya tienes cuenta? <a href="{% url 'login' %}">Iniciar sesión</a>
     </div>
+
   </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-if (isLoggedIn()) window.location.href = '/';
-
-async function doRegistro() {
-  const payload = {
-    first_name:       document.getElementById('f-nombre').value.trim(),
-    last_name:        document.getElementById('f-apellido').value.trim(),
-    username:         document.getElementById('f-username').value.trim(),
-    email:            document.getElementById('f-email').value.trim(),
-    dni:              document.getElementById('f-dni').value.trim(),
-    fecha_nacimiento: document.getElementById('f-fecha').value,
-    password:         document.getElementById('f-pass').value,
-    password2:        document.getElementById('f-pass2').value,
-  };
-
-  const errWrap = document.getElementById('msg-error');
-  const okWrap  = document.getElementById('msg-ok');
-  errWrap.style.display = 'none'; okWrap.style.display = 'none';
-
-  if (!payload.username || !payload.email || !payload.dni || !payload.fecha_nacimiento || !payload.password)
-    return showErr('Completa todos los campos obligatorios');
-  if (payload.password !== payload.password2)
-    return showErr('Las contrasenas no coinciden');
-  if (!/^\d{8}$/.test(payload.dni))
-    return showErr('El DNI debe tener exactamente 8 digitos numericos');
-
-  const btn = document.getElementById('btn-reg');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creando cuenta...';
-
-  try {
-    const res = await fetch('/api/usuarios/registro/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (res.ok || res.status === 201) {
-      document.getElementById('ok-text').textContent = 'Cuenta creada correctamente. Redirigiendo al login...';
-      okWrap.style.display = 'flex';
-      setTimeout(() => window.location.href = '/login/', 1800);
-    } else {
-      const errs = Object.entries(data).map(([k,v]) => `${Array.isArray(v)?v[0]:v}`).join(' | ');
-      showErr(errs);
-    }
-  } catch { showErr('Error de conexion. Intenta de nuevo.'); }
-  finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Crear cuenta gratis';
-  }
-}
-
-function showErr(msg) {
-  document.getElementById('error-text').textContent = msg;
-  document.getElementById('msg-error').style.display = 'flex';
-}
-</script>
 {% endblock %}

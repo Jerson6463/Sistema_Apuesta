@@ -1,39 +1,27 @@
-// FairBet Lab — Core JS
-let accessToken  = localStorage.getItem('fb_access');
-let refreshToken = localStorage.getItem('fb_refresh');
-let betslip      = JSON.parse(localStorage.getItem('fb_betslip') || '[]');
+// FairBet Lab — main.js
+// Autenticación: sesión Django (cookie). Sin JWT ni localStorage de tokens.
 
-// ── API ────────────────────────────────────────────────────────────────────────
-async function apiFetch(url, opts = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
-  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
-  let res = await fetch(url, { ...opts, headers });
+let betslip = JSON.parse(localStorage.getItem('fb_betslip') || '[]');
 
-  if (res.status === 401 && refreshToken) {
-    const r = await fetch('/api/usuarios/login/refresh/', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh: refreshToken })
-    });
-    if (r.ok) {
-      const d = await r.json();
-      accessToken = d.access;
-      localStorage.setItem('fb_access', accessToken);
-      headers['Authorization'] = `Bearer ${accessToken}`;
-      res = await fetch(url, { ...opts, headers });
-    } else { logout(); return null; }
-  }
-  return res;
+// ── CSRF ───────────────────────────────────────────────────────────────────────
+function getCsrf() {
+  return document.cookie.split(';')
+    .find(c => c.trim().startsWith('csrftoken='))
+    ?.split('=')[1] || '';
 }
 
-function isLoggedIn() { return !!accessToken; }
-
-function logout() {
-  localStorage.removeItem('fb_access');
-  localStorage.removeItem('fb_refresh');
-  localStorage.removeItem('fb_user');
-  localStorage.removeItem('fb_betslip');
-  betslip = [];
-  window.location.href = '/login/';
+// ── API fetch con sesión Django ────────────────────────────────────────────────
+async function apiFetch(url, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (opts.method && opts.method !== 'GET') {
+    headers['X-CSRFToken'] = getCsrf();
+  }
+  const res = await fetch(url, { ...opts, headers });
+  if (res.status === 403 || res.status === 401) {
+    window.location.href = '/login/';
+    return null;
+  }
+  return res;
 }
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
@@ -45,11 +33,23 @@ function toast(msg, type = 'info') {
   t.className = `toast ${type}`;
   t.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${msg}</span>`;
   wrap.appendChild(t);
-  setTimeout(() => { t.style.transition = '.3s'; t.style.opacity = '0'; t.style.transform = 'translateX(30px)'; setTimeout(() => t.remove(), 320); }, 3000);
+  setTimeout(() => {
+    t.style.transition = '.3s';
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(30px)';
+    setTimeout(() => t.remove(), 320);
+  }, 3000);
 }
 
 // ── Betslip ────────────────────────────────────────────────────────────────────
 function saveBetslip() { localStorage.setItem('fb_betslip', JSON.stringify(betslip)); }
+
+function limpiarBetslip() {
+  betslip = [];
+  document.querySelectorAll('.cuota-btn.selected').forEach(el => el.classList.remove('selected'));
+  saveBetslip();
+  renderBetslip();
+}
 
 function addToBetslip(cuotaId, seleccion, odds, evento, mercado) {
   const idx = betslip.findIndex(b => b.cuotaId === cuotaId);
@@ -73,8 +73,8 @@ function removeFromBetslip(cuotaId) {
 }
 
 function renderBetslip() {
-  const body   = document.getElementById('bs-body');
-  const foot   = document.getElementById('bs-foot');
+  const body    = document.getElementById('bs-body');
+  const foot    = document.getElementById('bs-foot');
   const countEl = document.getElementById('bs-count');
 
   if (countEl) countEl.textContent = betslip.length || '';
@@ -109,98 +109,87 @@ function calcBetslip() {
   const gi = document.getElementById('bs-ganancia');
   const ti = document.getElementById('bs-odds-total');
   if (!mi) return;
-  const monto = parseFloat(mi.value) || 0;
+  const monto     = parseFloat(mi.value) || 0;
   const totalOdds = betslip.reduce((acc, b) => acc * b.odds, 1);
   if (ti) ti.textContent = totalOdds.toFixed(2);
   if (gi) gi.textContent = `S/ ${(monto * totalOdds).toFixed(2)}`;
 }
 
+// ── Confirmar apuesta ──────────────────────────────────────────────────────────
 async function confirmarApuesta() {
-  if (!isLoggedIn()) { window.location.href = '/login/'; return; }
-  if (!betslip.length) { toast('Agrega al menos una seleccion al ticket', 'error'); return; }
+  if (!betslip.length) { toast('Agrega al menos una selección al ticket', 'error'); return; }
   const monto = parseFloat(document.getElementById('bs-monto')?.value || 0);
-  if (monto <= 0) { toast('Ingresa un monto valido', 'error'); return; }
+  if (monto <= 0) { toast('Ingresa un monto válido', 'error'); return; }
 
   const btn = document.getElementById('btn-apostar');
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...'; }
 
   try {
-    let res, data;
+    let res;
     if (betslip.length === 1) {
       res = await apiFetch('/api/apuestas/', {
         method: 'POST',
-        body: JSON.stringify({ cuota_id: betslip[0].cuotaId, monto: monto.toFixed(4), clave_idempotencia: crypto.randomUUID() })
+        body: JSON.stringify({
+          cuota_id:           betslip[0].cuotaId,
+          monto:              monto.toFixed(4),
+          clave_idempotencia: crypto.randomUUID(),
+        })
       });
-      data = await res.json();
     } else {
       res = await apiFetch('/api/apuestas/combinada/', {
         method: 'POST',
-        body: JSON.stringify({ cuota_ids: betslip.map(b => b.cuotaId), monto: monto.toFixed(4), clave_idempotencia: crypto.randomUUID() })
+        body: JSON.stringify({
+          cuota_ids:          betslip.map(b => b.cuotaId),
+          monto:              monto.toFixed(4),
+          clave_idempotencia: crypto.randomUUID(),
+        })
       });
-      data = await res.json();
     }
 
-    if (res?.ok) {
-      const pago = data.apuesta?.pago_potencial || data.combinada?.pago_potencial || '0';
-      toast(`Apuesta confirmada. Potencial: S/ ${parseFloat(pago).toFixed(2)}`, 'success');
-      betslip = []; saveBetslip(); renderBetslip();
-      actualizarSaldo();
+    if (!res) return;
+
+    const ct   = res.headers.get('content-type') || '';
+    const data = ct.includes('application/json') ? await res.json() : null;
+
+    if (res.ok) {
+      const pago = data?.apuesta?.pago_potencial || data?.combinada?.pago_potencial || '0';
+      toast(`¡Apuesta confirmada! Potencial: S/ ${parseFloat(pago).toFixed(2)}`, 'success');
+      betslip = [];
+      saveBetslip();
+      renderBetslip();
+      // Actualizar saldo en navbar sin recargar página
+      actualizarSaldoNavbar();
     } else {
-      toast(data.error || data.detail || 'Error al procesar la apuesta', 'error');
+      toast(data?.error || data?.detail || `Error ${res.status} al procesar la apuesta`, 'error');
     }
-  } catch { toast('Error de conexion', 'error'); }
-  finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar Apuesta'; }
+  } catch (e) {
+    toast('Error inesperado: ' + (e?.message || 'desconocido'), 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar Apuesta';
+    }
   }
 }
 
-// ── Navbar dinámico ────────────────────────────────────────────────────────────
-async function actualizarSaldo() {
-  if (!isLoggedIn()) return;
+// ── Actualizar saldo en navbar (sin recargar página) ───────────────────────────
+async function actualizarSaldoNavbar() {
+  const el = document.getElementById('nav-balance-val');
+  if (!el) return;
   const res = await apiFetch('/api/wallet/saldo/');
   if (!res?.ok) return;
   const d = await res.json();
-  const el = document.getElementById('nav-balance-val');
-  if (el) el.textContent = `S/ ${parseFloat(d.saldo_disponible).toFixed(2)}`;
+  el.textContent = `S/ ${parseFloat(d.saldo_disponible).toFixed(2)}`;
 }
 
-function renderNavbar() {
-  const navRight = document.getElementById('nav-right');
-  if (!navRight) return;
-  if (isLoggedIn()) {
-    const user = JSON.parse(localStorage.getItem('fb_user') || '{}');
-    navRight.innerHTML = `
-      <div class="nav-balance">
-        <i class="fa-solid fa-coins" style="color:var(--primary)"></i>
-        <span id="nav-balance-val">S/ --</span>
-      </div>
-      <a href="/wallet/" class="btn btn-ghost btn-sm">
-        <i class="fa-solid fa-plus"></i> Recargar
-      </a>
-      <a href="/mis-apuestas/" class="btn btn-ghost btn-sm">
-        <i class="fa-solid fa-user"></i> ${user.username || 'Mi cuenta'}
-      </a>
-      <button onclick="logout()" class="btn btn-ghost btn-sm">
-        <i class="fa-solid fa-right-from-bracket"></i>
-      </button>`;
-    actualizarSaldo();
-  } else {
-    navRight.innerHTML = `
-      <a href="/login/"    class="btn btn-ghost btn-sm">Iniciar sesion</a>
-      <a href="/registro/" class="btn btn-primary btn-sm">Registrarse</a>`;
-  }
-}
-
-function marcarCuotasActivas() {
-  betslip.forEach(b => {
-    document.querySelectorAll(`[data-cuota="${b.cuotaId}"]`).forEach(el => el.classList.add('selected'));
-  });
-}
-
+// ── Al cargar la página ────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  renderNavbar();
   renderBetslip();
-  marcarCuotasActivas();
+  // Marcar cuotas que ya están en el betslip guardado
+  betslip.forEach(b => {
+    document.querySelectorAll(`[data-cuota="${b.cuotaId}"]`)
+      .forEach(el => el.classList.add('selected'));
+  });
   const mi = document.getElementById('bs-monto');
   if (mi) mi.addEventListener('input', calcBetslip);
 });
