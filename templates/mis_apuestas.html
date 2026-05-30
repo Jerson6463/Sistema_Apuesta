@@ -83,16 +83,17 @@
           <tr>
             <td style="max-width:180px">
               <div style="font-weight:600;font-size:13px;line-height:1.4">
-                {{ a.cuota.mercado.evento.nombre }}
+                {% if a.tipo == 'combinada' %}<i class="fa-solid fa-layer-group" style="color:var(--primary);margin-right:4px"></i>{% endif %}
+                {{ a.evento }}
               </div>
             </td>
-            <td style="font-weight:700">{{ a.cuota.seleccion }}</td>
-            <td style="color:var(--text-2);font-size:13px">{{ a.cuota.mercado.get_tipo_display }}</td>
-            <td style="font-weight:700;color:var(--primary)">@ {{ a.cuota_al_apostar|floatformat:2 }}</td>
-            <td style="font-variant-numeric:tabular-nums">S/ {{ a.monto_apostado|floatformat:2 }}</td>
+            <td style="font-weight:700">{{ a.seleccion }}</td>
+            <td style="color:var(--text-2);font-size:13px">{{ a.mercado }}</td>
+            <td style="font-weight:700;color:var(--primary)">@ {{ a.cuota|floatformat:2 }}</td>
+            <td style="font-variant-numeric:tabular-nums">S/ {{ a.monto|floatformat:2 }}</td>
             <td style="font-variant-numeric:tabular-nums;font-weight:600;
                        color:{% if a.estado == 'ganada' %}var(--green){% else %}inherit{% endif %}">
-              S/ {{ a.pago_potencial|floatformat:2 }}
+              S/ {{ a.potencial|floatformat:2 }}
             </td>
             <td>
               {% if a.estado == 'aceptada' %}
@@ -113,9 +114,9 @@
               {{ a.creado_en|date:"d M, H:i" }}
             </td>
             <td>
-              {% if a.estado == 'aceptada' %}
+              {% if a.tipo == 'simple' and a.estado == 'aceptada' %}
               <button class="btn btn-ghost btn-xs"
-                      onclick="abrirCO('{{ a.id }}', {{ a.monto_apostado }}, {{ a.cuota_al_apostar }}, '{{ a.cuota.seleccion|escapejs }}', '{{ a.cuota.mercado.evento.nombre|escapejs }}')">
+                      onclick="abrirCO('{{ a.id }}', {{ a.monto }}, {{ a.cuota }}, '{{ a.seleccion|escapejs }}', '{{ a.evento|escapejs }}')">
                 <i class="fa-solid fa-sack-dollar"></i> Cash-out
               </button>
               {% endif %}

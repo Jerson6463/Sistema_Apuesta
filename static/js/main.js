@@ -31,14 +31,24 @@ function toast(msg, type = 'info') {
   const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
   const t = document.createElement('div');
   t.className = `toast ${type}`;
-  t.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${msg}</span>`;
+  t.innerHTML = `<i class="${icons[type] || icons.info}"></i><span>${msg}</span>`;
   wrap.appendChild(t);
   setTimeout(() => {
     t.style.transition = '.3s';
     t.style.opacity = '0';
     t.style.transform = 'translateX(30px)';
     setTimeout(() => t.remove(), 320);
-  }, 3000);
+  }, 5000);
+}
+
+function mostrarErrorBetslip(msg) {
+  const el = document.getElementById('bs-error');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function limpiarErrorBetslip() {
+  const el = document.getElementById('bs-error');
+  if (el) { el.textContent = ''; el.style.display = 'none'; }
 }
 
 // ── Betslip ────────────────────────────────────────────────────────────────────
@@ -117,6 +127,7 @@ function calcBetslip() {
 
 // ── Confirmar apuesta ──────────────────────────────────────────────────────────
 async function confirmarApuesta() {
+  limpiarErrorBetslip();
   if (!betslip.length) { toast('Agrega al menos una selección al ticket', 'error'); return; }
   const monto = parseFloat(document.getElementById('bs-monto')?.value || 0);
   if (monto <= 0) { toast('Ingresa un monto válido', 'error'); return; }
@@ -160,7 +171,10 @@ async function confirmarApuesta() {
       // Actualizar saldo en navbar sin recargar página
       actualizarSaldoNavbar();
     } else {
-      toast(data?.error || data?.detail || `Error ${res.status} al procesar la apuesta`, 'error');
+      const statusMsgs = { 402: 'Saldo insuficiente. Recarga fichas primero.', 429: 'Demasiadas solicitudes. Espera un momento antes de apostar de nuevo.' };
+      const errMsg = data?.error || data?.detail || statusMsgs[res.status] || `Error ${res.status} al procesar la apuesta`;
+      toast(errMsg, 'error');
+      mostrarErrorBetslip(errMsg);
     }
   } catch (e) {
     toast('Error inesperado: ' + (e?.message || 'desconocido'), 'error');
