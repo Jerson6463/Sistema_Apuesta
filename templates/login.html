@@ -1,52 +1,96 @@
 {% extends "base.html" %}
-{% block title %}Iniciar Sesión — FairBet Lab{% endblock %}
+{% block title %}Iniciar Sesion — FairBet Lab{% endblock %}
 
 {% block content %}
-<div class="auth-page">
-  <div class="auth-card">
-    <h2>👋 Bienvenido</h2>
-    <p class="subtitle">Inicia sesión para apostar con fichas virtuales</p>
+<div class="auth-wrap">
+  <div class="auth-box">
 
-    <div id="msg-error" class="form-error" style="display:none"></div>
-
-    <div class="form-group">
-      <label>Usuario</label>
-      <input id="username" type="text" class="form-control" placeholder="Tu nombre de usuario" autocomplete="username"/>
-    </div>
-    <div class="form-group">
-      <label>Contraseña</label>
-      <input id="password" type="password" class="form-control" placeholder="Tu contraseña" autocomplete="current-password"/>
+    <div class="auth-logo">
+      <i class="fa-solid fa-dice"></i> FairBet Lab
     </div>
 
-    <button class="form-submit" id="btn-login" onclick="doLogin()">Iniciar Sesión</button>
+    <h2>Iniciar Sesion</h2>
+    <p class="subtitle">Accede a tu cuenta para apostar con fichas virtuales</p>
+
+    <div id="msg-error" class="form-error" style="display:none">
+      <i class="fa-solid fa-circle-xmark"></i>
+      <span id="error-text"></span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <i class="fa-solid fa-user"></i> Usuario
+      </label>
+      <input id="f-username" type="text" class="form-control" placeholder="Tu nombre de usuario" autocomplete="username"/>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <i class="fa-solid fa-lock"></i> Contrasena
+      </label>
+      <input id="f-password" type="password" class="form-control" placeholder="Tu contrasena" autocomplete="current-password"/>
+    </div>
+
+    <button class="btn btn-primary btn-full" id="btn-login" onclick="doLogin()" style="margin-top:4px">
+      <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesion
+    </button>
+
+    <div class="form-divider"></div>
+
+    <div style="background:var(--bg-hover);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <i class="fa-solid fa-circle-info"></i> Cuentas de prueba
+      </div>
+      <div style="display:grid;gap:6px">
+        <div onclick="autoFill('jugador_nuevo')" style="cursor:pointer;padding:8px 12px;background:var(--bg-input);border-radius:var(--radius);font-size:13px;transition:var(--transition)" onmouseover="this.style.borderColor='var(--primary)'" >
+          <span style="font-weight:600">jugador_nuevo</span>
+          <span style="color:var(--text-3);margin-left:8px">Verificado &middot; S/ 500</span>
+        </div>
+        <div onclick="autoFill('jugador_verificado')" style="cursor:pointer;padding:8px 12px;background:var(--bg-input);border-radius:var(--radius);font-size:13px">
+          <span style="font-weight:600">jugador_verificado</span>
+          <span style="color:var(--text-3);margin-left:8px">Verificado &middot; S/ 500</span>
+        </div>
+        <div onclick="autoFill('admin_fairbet')" style="cursor:pointer;padding:8px 12px;background:var(--bg-input);border-radius:var(--radius);font-size:13px">
+          <span style="font-weight:600">admin_fairbet</span>
+          <span style="color:var(--primary);margin-left:8px">Staff &middot; Admin</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:10px">
+        <i class="fa-solid fa-key"></i> Contrasena: <strong style="color:var(--text-2)">FairBet2026!</strong>
+        &mdash; Haz clic en un usuario para autocompletar
+      </div>
+    </div>
 
     <div class="form-footer">
-      ¿No tienes cuenta? <a href="/registro/">Regístrate gratis</a>
+      No tienes cuenta? <a href="/registro/">Registrate gratis</a>
     </div>
 
-    <div class="divider"></div>
-    <div style="font-size:12px;color:var(--text3);text-align:center">
-      <strong style="color:var(--text2)">Usuarios de prueba:</strong><br/>
-      jugador_verificado / jugador_nuevo — Clave: <span style="color:var(--primary);font-family:monospace">FairBet2026!</span>
-    </div>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-if (localStorage.getItem('fb_access')) window.location.href = '/';
+if (isLoggedIn()) window.location.href = '/';
+
+function autoFill(username) {
+  document.getElementById('f-username').value = username;
+  document.getElementById('f-password').value = 'FairBet2026!';
+  document.getElementById('f-username').focus();
+}
 
 async function doLogin() {
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value;
+  const username = document.getElementById('f-username').value.trim();
+  const password = document.getElementById('f-password').value;
   const btn = document.getElementById('btn-login');
-  const errEl = document.getElementById('msg-error');
+  const errWrap = document.getElementById('msg-error');
+  const errText = document.getElementById('error-text');
 
-  if (!username || !password) { showError('Completa todos los campos'); return; }
+  errWrap.style.display = 'none';
+  if (!username || !password) { showErr('Completa usuario y contrasena'); return; }
 
-  btn.disabled = true; btn.textContent = 'Ingresando...';
-  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ingresando...';
 
   try {
     const res = await fetch('/api/usuarios/login/', {
@@ -58,22 +102,24 @@ async function doLogin() {
     if (res.ok) {
       localStorage.setItem('fb_access', data.access);
       localStorage.setItem('fb_refresh', data.refresh);
-      // Cargar perfil
-      const perfil = await fetch('/api/usuarios/perfil/', {
+      const p = await fetch('/api/usuarios/perfil/', {
         headers: { 'Authorization': `Bearer ${data.access}` }
       });
-      if (perfil.ok) localStorage.setItem('fb_user', JSON.stringify(await perfil.json()));
+      if (p.ok) localStorage.setItem('fb_user', JSON.stringify(await p.json()));
       window.location.href = '/';
     } else {
-      showError(data.detail || data.non_field_errors?.[0] || 'Credenciales incorrectas');
+      showErr(data.detail || data.non_field_errors?.[0] || 'Credenciales incorrectas');
     }
-  } catch { showError('Error de conexión. Intenta de nuevo.'); }
-  finally { btn.disabled = false; btn.textContent = 'Iniciar Sesión'; }
+  } catch { showErr('Error de conexion. Intenta de nuevo.'); }
+  finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesion';
+  }
 }
 
-function showError(msg) {
-  const el = document.getElementById('msg-error');
-  el.textContent = msg; el.style.display = 'block';
+function showErr(msg) {
+  document.getElementById('error-text').textContent = msg;
+  document.getElementById('msg-error').style.display = 'flex';
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });

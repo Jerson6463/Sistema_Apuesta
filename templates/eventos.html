@@ -3,62 +3,91 @@
 {% block nav_eventos %}active{% endblock %}
 
 {% block content %}
-<div class="page-layout">
+<div class="page-wrap">
 
-  <!-- SIDEBAR -->
-  <aside class="col-left">
-    <div class="card">
-      <div class="card-header"><h3>🏆 Competiciones</h3></div>
-      <div class="card-body" style="padding:8px">
-        <div class="sport-item active" onclick="filtrarEstado('todos')">
-          <span class="sport-icon">⚽</span> Todos los eventos
-        </div>
-        <div class="sport-item" onclick="filtrarEstado('programado')">
-          <span class="sport-icon">📅</span> Programados
-        </div>
-        <div class="sport-item" onclick="filtrarEstado('en_vivo')">
-          <span class="sport-icon">🔴</span> En Vivo
-        </div>
-        <div class="divider"></div>
-        <div style="padding:8px 10px;font-size:12px;color:var(--text3);font-weight:600">MERCADOS</div>
-        <div class="sport-item" onclick="filtrarMercado('1X2')"><span class="sport-icon">🎯</span> 1X2</div>
-        <div class="sport-item" onclick="filtrarMercado('over_under')"><span class="sport-icon">📊</span> Over/Under</div>
-        <div class="sport-item" onclick="filtrarMercado('btts')"><span class="sport-icon">⚡</span> Ambos Anotan</div>
+  <!-- SIDEBAR IZQUIERDO -->
+  <aside class="sidebar-left">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Estado</div>
+      <div class="sidebar-item active" id="f-todos" onclick="filtrar('todos',this)">
+        <i class="fa-solid fa-list"></i> Todos
+        <span class="sidebar-count" id="cnt-total">--</span>
+      </div>
+      <div class="sidebar-item" id="f-programado" onclick="filtrar('programado',this)">
+        <i class="fa-regular fa-clock"></i> Programados
+        <span class="sidebar-count" id="cnt-prog">--</span>
+      </div>
+      <div class="sidebar-item" id="f-en_vivo" onclick="filtrar('en_vivo',this)">
+        <i class="fa-solid fa-circle" style="color:var(--red);font-size:8px"></i> En Vivo
+        <span class="sidebar-count" id="cnt-vivo">--</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Mercados</div>
+      <div class="sidebar-item" onclick="scrollToMercado('1X2')">
+        <i class="fa-solid fa-chart-simple"></i> 1X2
+      </div>
+      <div class="sidebar-item" onclick="scrollToMercado('over_under')">
+        <i class="fa-solid fa-arrow-up-9-1"></i> Over/Under
+      </div>
+      <div class="sidebar-item" onclick="scrollToMercado('btts')">
+        <i class="fa-solid fa-arrows-left-right"></i> Ambos Anotan
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Juego Responsable</div>
+      <div class="sidebar-item" onclick="location.href='/wallet/'" style="color:var(--primary)">
+        <i class="fa-solid fa-shield-halved"></i> Mis limites
       </div>
     </div>
   </aside>
 
-  <!-- EVENTOS -->
-  <main class="col-center">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="section-title" style="margin:0">⚽ Eventos disponibles</div>
-      <div style="font-size:13px;color:var(--text2)" id="total-eventos"></div>
+  <!-- CONTENIDO CENTRAL -->
+  <main class="main-content">
+    <div class="section-hdr">
+      <h2><i class="fa-solid fa-futbol"></i> Eventos — Mundial 2026</h2>
+      <span style="font-size:13px;color:var(--text-3)" id="label-total"></span>
     </div>
 
-    <div id="eventos-list">
-      <div style="text-align:center;padding:60px;color:var(--text2)">
-        <div style="font-size:40px;margin-bottom:12px">⚽</div>Cargando eventos...
+    <div id="eventos-wrap">
+      <div style="text-align:center;padding:60px;color:var(--text-3)">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:28px;display:block;margin-bottom:12px"></i>
+        Cargando eventos...
       </div>
     </div>
   </main>
 
   <!-- BETSLIP -->
-  <aside class="col-right">
-    <div class="card betslip">
-      <div class="card-header">
-        <h3>🎯 Mi Ticket <span id="betslip-count" style="background:var(--primary);color:#fff;padding:2px 7px;border-radius:10px;font-size:11px;margin-left:4px"></span></h3>
+  <aside class="sidebar-right">
+    <div class="betslip">
+      <div class="betslip-header">
+        <h3>
+          <i class="fa-solid fa-ticket"></i> Mi Ticket
+          <span class="bs-count" id="bs-count"></span>
+        </h3>
+        <button onclick="betslip=[];saveBetslip();renderBetslip()" style="color:var(--text-3);font-size:12px">
+          Limpiar
+        </button>
       </div>
-      <div class="betslip-tabs">
-        <div class="betslip-tab active">Simple / Combinada</div>
-      </div>
-      <div id="betslip-body"></div>
-      <div id="betslip-footer" style="display:none">
-        <div class="betslip-footer">
-          <div class="betslip-info"><span>Cuota total</span><span class="val" id="total-odds">1.00</span></div>
-          <input type="number" class="monto-input" id="monto-apuesta" placeholder="Monto (S/)" min="1" step="1" value="10"/>
-          <div class="betslip-info"><span>Ganancia potencial</span><span class="val text-green" id="ganancia-potencial">S/ 0.00</span></div>
-          <button class="btn-apostar" id="btn-apostar" onclick="confirmarApuesta()">✅ Confirmar Apuesta</button>
-          <div class="aviso-responsable">🛡️ Apuesta con responsabilidad. Moneda virtual educativa.</div>
+      <div id="bs-body"></div>
+      <div id="bs-foot" style="display:none">
+        <div class="betslip-foot">
+          <div class="bs-row">
+            <span>Cuota total</span>
+            <span class="val" id="bs-odds-total">1.00</span>
+          </div>
+          <input type="number" id="bs-monto" class="bs-monto" placeholder="Monto en S/" min="1" step="1" value="10"/>
+          <div class="bs-row">
+            <span>Ganancia potencial</span>
+            <span class="val green" id="bs-ganancia">S/ 0.00</span>
+          </div>
+          <button class="btn-apostar" id="btn-apostar" onclick="confirmarApuesta()">
+            <i class="fa-solid fa-check"></i> Confirmar Apuesta
+          </button>
+          <p class="bs-legal">
+            <i class="fa-solid fa-shield-halved"></i>
+            Apuesta con responsabilidad. Moneda virtual educativa sin valor real.
+          </p>
         </div>
       </div>
     </div>
@@ -69,143 +98,159 @@
 
 {% block extra_js %}
 <script>
-let todosEventos = [];
+const FLAGS = { Peru:'🇵🇪', Brasil:'🇧🇷', Argentina:'🇦🇷', Mexico:'🇲🇽', Uruguay:'🇺🇾', Colombia:'🇨🇴' };
+let allEventos = [];
 
-async function cargarEventos() {
-  const token = localStorage.getItem('fb_access');
-  if (!token) {
-    document.getElementById('eventos-list').innerHTML = `
-      <div class="alert alert-info" style="text-align:center;padding:32px">
-        <div style="font-size:32px;margin-bottom:12px">🔐</div>
-        <div style="font-size:16px;font-weight:700;margin-bottom:8px">Inicia sesión para ver las cuotas</div>
-        <div style="color:var(--text2);margin-bottom:20px">Regístrate gratis y recibe 500 fichas de bienvenida</div>
-        <a href="/login/" class="btn btn-primary" style="margin-right:8px">Iniciar sesión</a>
-        <a href="/registro/" class="btn btn-outline">Registrarse</a>
+async function init() {
+  if (!isLoggedIn()) {
+    document.getElementById('eventos-wrap').innerHTML = `
+      <div class="alert alert-info">
+        <i class="fa-solid fa-lock"></i>
+        <span>Inicia sesion para ver las cuotas en tiempo real.
+          <a href="/login/" style="color:var(--primary);font-weight:700;margin-left:6px">Iniciar sesion</a> &nbsp;|&nbsp;
+          <a href="/registro/" style="color:var(--primary);font-weight:700">Registrarse</a>
+        </span>
       </div>`;
     return;
   }
-
   try {
     const res = await apiFetch('/api/eventos/');
     if (!res.ok) throw new Error();
-    todosEventos = await res.json();
-    renderEventos(todosEventos);
+    allEventos = await res.json();
+    actualizarContadores();
+    renderEventos(allEventos);
   } catch {
-    document.getElementById('eventos-list').innerHTML = '<div class="alert alert-warning">Error al cargar eventos. Recarga la página.</div>';
+    document.getElementById('eventos-wrap').innerHTML =
+      '<div class="alert alert-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Error al cargar eventos.</span></div>';
   }
 }
 
-function renderEventos(eventos) {
-  const el = document.getElementById('total-eventos');
-  if (el) el.textContent = `${eventos.length} evento${eventos.length !== 1 ? 's' : ''}`;
+function actualizarContadores() {
+  document.getElementById('cnt-total').textContent = allEventos.length;
+  document.getElementById('cnt-prog').textContent  = allEventos.filter(e=>e.estado==='programado').length;
+  document.getElementById('cnt-vivo').textContent  = allEventos.filter(e=>e.estado==='en_vivo').length;
+}
 
-  if (!eventos.length) {
-    document.getElementById('eventos-list').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text2)">No hay eventos disponibles</div>';
+function filtrar(estado, el) {
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  const lista = estado==='todos' ? allEventos : allEventos.filter(e=>e.estado===estado);
+  renderEventos(lista);
+}
+
+function renderEventos(lista) {
+  const lbl = document.getElementById('label-total');
+  if (lbl) lbl.textContent = `${lista.length} evento${lista.length!==1?'s':''}`;
+
+  if (!lista.length) {
+    document.getElementById('eventos-wrap').innerHTML =
+      '<p style="text-align:center;padding:60px;color:var(--text-3)">No hay eventos con ese filtro.</p>';
     return;
   }
 
-  document.getElementById('eventos-list').innerHTML = eventos.map(ev => {
-    const fecha = new Date(ev.fecha_inicio).toLocaleString('es-PE', { weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-    const esVivo = ev.estado === 'en_vivo';
+  document.getElementById('eventos-wrap').innerHTML = lista.map(ev => {
+    const fecha = new Date(ev.fecha_inicio).toLocaleString('es-PE', {weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const vivo  = ev.estado==='en_vivo';
     return `
-    <div class="evento-card" id="evento-${ev.id}">
-      <div class="evento-header">
-        <span class="liga">🌍 Mundial 2026 · Fase de Grupos</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          ${esVivo ? '<span class="live-badge"><span class="live-dot"></span>EN VIVO</span>' : `<span class="time">📅 ${fecha}</span>`}
-        </div>
+    <div class="evento-card">
+      <div class="evento-meta">
+        <span class="liga"><i class="fa-solid fa-earth-americas"></i> Mundial 2026 &middot; Fase de Grupos</span>
+        ${vivo
+          ? '<span class="live-badge"><span class="live-dot"></span> EN VIVO</span>'
+          : `<span style="display:flex;align-items:center;gap:5px"><i class="fa-regular fa-clock"></i>${fecha}</span>`}
       </div>
       <div class="evento-body">
         <div class="equipos">
           <div class="equipo">
-            <div style="font-size:36px;margin-bottom:6px">${banderaEquipo(ev.equipo_local)}</div>
+            <span class="equipo-flag">${FLAGS[ev.equipo_local]||''}</span>
             <div class="equipo-name">${ev.equipo_local}</div>
-            <div class="equipo-sub">Local</div>
+            <div class="equipo-label">Local</div>
           </div>
-          <div class="vs">VS</div>
+          <div class="vs-badge">VS</div>
           <div class="equipo">
-            <div style="font-size:36px;margin-bottom:6px">${banderaEquipo(ev.equipo_visitante)}</div>
+            <span class="equipo-flag">${FLAGS[ev.equipo_visitante]||''}</span>
             <div class="equipo-name">${ev.equipo_visitante}</div>
-            <div class="equipo-sub">Visitante</div>
+            <div class="equipo-label">Visitante</div>
           </div>
         </div>
-        <div id="mercados-${ev.id}">
-          <div style="text-align:center;padding:12px;color:var(--text3);font-size:13px">Cargando cuotas...</div>
+        <div id="mkt-${ev.id}">
+          <div style="text-align:center;padding:14px;color:var(--text-3);font-size:13px">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+          </div>
         </div>
-        <div style="text-align:right;margin-top:8px">
-          <a href="/eventos/${ev.id}/" style="font-size:12px;color:var(--text2)">Ver todos los mercados →</a>
+        <div class="evento-footer">
+          <a href="/eventos/${ev.id}/" class="mas-mercados">
+            Mas mercados <i class="fa-solid fa-chevron-right"></i>
+          </a>
         </div>
       </div>
     </div>`;
   }).join('');
 
-  eventos.forEach(ev => cargarMercados(ev.id));
+  lista.forEach(ev => cargarMercados(ev));
+  marcarCuotasActivas();
 }
 
-async function cargarMercados(eventoId) {
+async function cargarMercados(ev) {
   try {
-    const res = await apiFetch(`/api/eventos/${eventoId}/`);
+    const res = await apiFetch(`/api/eventos/${ev.id}/`);
     if (!res.ok) return;
-    const ev = await res.json();
-    const mercado1x2 = ev.mercados?.find(m => m.tipo === '1X2');
-    if (!mercado1x2) return;
+    const det = await res.json();
+    const el  = document.getElementById(`mkt-${ev.id}`);
+    if (!el) return;
 
-    const local = mercado1x2.cuotas.find(c => c.seleccion === 'local');
-    const empate = mercado1x2.cuotas.find(c => c.seleccion === 'empate');
-    const visitante = mercado1x2.cuotas.find(c => c.seleccion === 'visitante');
+    const m1x2 = det.mercados?.find(m=>m.tipo==='1X2');
+    const mOU  = det.mercados?.find(m=>m.tipo==='over_under');
+    const mBTTS= det.mercados?.find(m=>m.tipo==='btts');
 
-    const overUnder = ev.mercados?.find(m => m.tipo === 'over_under');
-    const over = overUnder?.cuotas.find(c => c.seleccion === 'over');
-    const under = overUnder?.cuotas.find(c => c.seleccion === 'under');
-
-    const html = `
-      <div style="margin-bottom:10px">
-        <div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:6px">🎯 1X2 — Resultado</div>
+    let html = '';
+    if (m1x2) {
+      const L=m1x2.cuotas.find(c=>c.seleccion==='local');
+      const E=m1x2.cuotas.find(c=>c.seleccion==='empate');
+      const V=m1x2.cuotas.find(c=>c.seleccion==='visitante');
+      html += `
+        <div class="mercado-label"><i class="fa-solid fa-chart-simple"></i> 1X2 &mdash; Resultado</div>
         <div class="cuotas-row">
-          ${local ? cuotaBtn(local.id, ev.equipo_local, '1', local.valor, ev.nombre, '1X2') : ''}
-          ${empate ? cuotaBtn(empate.id, 'Empate', 'X', empate.valor, ev.nombre, '1X2') : ''}
-          ${visitante ? cuotaBtn(visitante.id, ev.equipo_visitante, '2', visitante.valor, ev.nombre, '1X2') : ''}
-        </div>
-      </div>
-      ${over && under ? `
-      <div>
-        <div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:6px">📊 Over/Under 2.5 goles</div>
+          ${L?qBtn(L.id,ev.equipo_local,'1',L.valor,ev.nombre,'1X2'):''}
+          ${E?qBtn(E.id,'Empate','X',E.valor,ev.nombre,'1X2'):''}
+          ${V?qBtn(V.id,ev.equipo_visitante,'2',V.valor,ev.nombre,'1X2'):''}
+        </div>`;
+    }
+    if (mOU) {
+      const O=mOU.cuotas.find(c=>c.seleccion==='over');
+      const U=mOU.cuotas.find(c=>c.seleccion==='under');
+      html += `
+        <div class="mercado-label" style="margin-top:12px"><i class="fa-solid fa-arrow-up-9-1"></i> Over/Under 2.5 goles</div>
         <div class="cuotas-row">
-          ${cuotaBtn(over.id, 'Over 2.5', '+2.5', over.valor, ev.nombre, 'Over/Under')}
-          ${cuotaBtn(under.id, 'Under 2.5', '-2.5', under.valor, ev.nombre, 'Over/Under')}
-        </div>
-      </div>` : ''}`;
-
-    document.getElementById(`mercados-${eventoId}`).innerHTML = html;
+          ${O?qBtn(O.id,'Mas de 2.5','Over',O.valor,ev.nombre,'O/U'):''}
+          ${U?qBtn(U.id,'Menos de 2.5','Under',U.valor,ev.nombre,'O/U'):''}
+        </div>`;
+    }
+    if (mBTTS) {
+      const S=mBTTS.cuotas.find(c=>c.seleccion==='si');
+      const N=mBTTS.cuotas.find(c=>c.seleccion==='no');
+      html += `
+        <div class="mercado-label" style="margin-top:12px"><i class="fa-solid fa-arrows-left-right"></i> Ambos equipos anotan</div>
+        <div class="cuotas-row">
+          ${S?qBtn(S.id,'Si anotan','Si',S.valor,ev.nombre,'BTTS'):''}
+          ${N?qBtn(N.id,'No ambos','No',N.valor,ev.nombre,'BTTS'):''}
+        </div>`;
+    }
+    el.innerHTML = html || '<p style="color:var(--text-3);font-size:13px">Sin mercados disponibles</p>';
     marcarCuotasActivas();
   } catch {}
 }
 
-function cuotaBtn(id, seleccion, label, valor, evento, mercado) {
-  return `<div class="cuota-btn" data-cuota="${id}" onclick="addToBetslip(${id},'${seleccion}',${valor},'${evento}','${mercado}')">
-    <div class="label">${label}</div>
-    <div class="odds">${valor}</div>
+function qBtn(id, sel, label, val, evento, mercado) {
+  return `<div class="cuota-btn" data-cuota="${id}"
+    onclick="addToBetslip(${id},'${sel}',${parseFloat(val)},'${evento.replace(/'/g,"\\'")}','${mercado}')">
+    <div class="qlabel">${label}</div>
+    <div class="qval">${parseFloat(val).toFixed(2)}</div>
   </div>`;
 }
 
-function banderaEquipo(nombre) {
-  const banderas = { 'Peru': '🇵🇪', 'Brasil': '🇧🇷', 'Argentina': '🇦🇷', 'Mexico': '🇲🇽', 'Uruguay': '🇺🇾', 'Colombia': '🇨🇴' };
-  return banderas[nombre] || '🏳️';
-}
+function scrollToMercado(tipo) { window.scrollTo({top:0,behavior:'smooth'}); }
 
-function filtrarEstado(estado) {
-  document.querySelectorAll('.sport-item').forEach(el => el.classList.remove('active'));
-  event.target.closest('.sport-item').classList.add('active');
-  if (estado === 'todos') renderEventos(todosEventos);
-  else renderEventos(todosEventos.filter(e => e.estado === estado));
-}
-
-function filtrarMercado(tipo) {
-  document.querySelectorAll('.sport-item').forEach(el => el.classList.remove('active'));
-  event.target.closest('.sport-item').classList.add('active');
-  renderEventos(todosEventos);
-}
-
-cargarEventos();
+init();
 </script>
 {% endblock %}

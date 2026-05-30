@@ -3,124 +3,156 @@
 {% block nav_wallet %}active{% endblock %}
 
 {% block content %}
-<div style="max-width:900px;margin:0 auto;padding:28px 32px">
+<div class="page-inner">
 
-  <!-- SALDO PRINCIPAL -->
-  <div class="card" style="margin-bottom:24px;background:linear-gradient(135deg,#1a0e00,#2d1800);border-color:#78350f">
-    <div class="card-body" style="padding:32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px">
-      <div>
-        <div style="font-size:13px;color:#fbbf24;font-weight:600;margin-bottom:6px">💰 SALDO DISPONIBLE</div>
-        <div style="font-size:44px;font-weight:900;color:#fff" id="saldo-display">S/ --</div>
-        <div style="font-size:13px;color:#f97316;margin-top:4px" id="saldo-bloqueado">Bloqueado en apuestas: S/ --</div>
+  <div class="page-title">
+    <i class="fa-solid fa-wallet"></i> Mi Wallet
+  </div>
+  <p class="page-sub">Gestiona tus fichas virtuales, limites y controles de juego responsable</p>
+
+  <!-- BALANCE HERO -->
+  <div class="balance-hero">
+    <div>
+      <div class="balance-label">
+        <i class="fa-solid fa-coins"></i> Saldo disponible
       </div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="abrirModal('recargar')">➕ Recargar fichas</button>
-        <button class="btn btn-outline" onclick="abrirModal('retirar')">💸 Retirar fichas</button>
+      <div class="balance-amount" id="bal-disp">S/ --</div>
+      <div class="balance-blocked" id="bal-bloq">
+        <i class="fa-solid fa-lock"></i> Bloqueado en apuestas: S/ --
       </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="abrirModal('recargar')">
+        <i class="fa-solid fa-plus"></i> Recargar fichas
+      </button>
+      <button class="btn btn-ghost" onclick="abrirModal('retirar')">
+        <i class="fa-solid fa-arrow-up-from-bracket"></i> Retirar fichas
+      </button>
     </div>
   </div>
 
   <!-- STATS -->
-  <div class="dashboard-grid" style="margin-bottom:24px">
-    <div class="dash-card green">
-      <div class="dc-label">Total recargado (mes)</div>
-      <div class="dc-val" id="stat-recargado">--</div>
-      <div class="dc-sub">fichas virtuales</div>
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-arrow-down"></i> Recargado este mes</div>
+      <div class="value c-primary" id="s-recargado">--</div>
+      <div class="sub">fichas virtuales</div>
     </div>
-    <div class="dash-card orange">
-      <div class="dc-label">Total apostado (mes)</div>
-      <div class="dc-val" id="stat-apostado">--</div>
-      <div class="dc-sub">en apuestas</div>
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-ticket"></i> Apostado este mes</div>
+      <div class="value c-blue" id="s-apostado">--</div>
+      <div class="sub">en apuestas</div>
     </div>
-    <div class="dash-card" style="">
-      <div class="dc-label">Total ganado (mes)</div>
-      <div class="dc-val text-green" id="stat-ganado">--</div>
-      <div class="dc-sub">en premios</div>
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-trophy"></i> Ganado este mes</div>
+      <div class="value c-green" id="s-ganado">--</div>
+      <div class="sub">en premios</div>
     </div>
-    <div class="dash-card yellow">
-      <div class="dc-label">Balance neto (mes)</div>
-      <div class="dc-val" id="stat-balance">--</div>
-      <div class="dc-sub">resultado del mes</div>
+    <div class="stat-box">
+      <div class="label"><i class="fa-solid fa-scale-balanced"></i> Balance neto</div>
+      <div class="value" id="s-balance">--</div>
+      <div class="sub">resultado del mes</div>
     </div>
   </div>
 
   <!-- TABS -->
-  <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;gap:4px">
-    <button class="betslip-tab active" id="tab-historial" onclick="cambiarTab('historial')">📋 Historial</button>
-    <button class="betslip-tab" id="tab-limites" onclick="cambiarTab('limites')">🛡️ Límites de Juego</button>
-    <button class="betslip-tab" id="tab-exclusion" onclick="cambiarTab('exclusion')">🚫 Autoexclusión</button>
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-historial" onclick="cambiarTab('historial')">
+      <i class="fa-solid fa-list"></i> Historial
+    </button>
+    <button class="tab-btn" id="tab-limites" onclick="cambiarTab('limites')">
+      <i class="fa-solid fa-shield-halved"></i> Limites de Juego
+    </button>
+    <button class="tab-btn" id="tab-exclusion" onclick="cambiarTab('exclusion')">
+      <i class="fa-solid fa-ban"></i> Autoexclusion
+    </button>
   </div>
 
-  <!-- HISTORIAL -->
+  <!-- PANEL HISTORIAL -->
   <div id="panel-historial">
-    <div class="card">
-      <div class="card-header"><h3>📋 Últimos movimientos</h3></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Tipo</th><th>Dirección</th><th>Monto</th><th>Fecha</th></tr></thead>
-          <tbody id="historial-body">
-            <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text3)">Cargando...</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><i class="fa-solid fa-tag"></i> Tipo</th>
+            <th>Direccion</th>
+            <th>Monto</th>
+            <th><i class="fa-regular fa-clock"></i> Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="hist-body">
+          <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-3)">
+            <i class="fa-solid fa-spinner fa-spin"></i> Cargando...
+          </td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <!-- LÍMITES -->
+  <!-- PANEL LIMITES -->
   <div id="panel-limites" style="display:none">
-    <div class="card">
-      <div class="card-header"><h3>🛡️ Límites de depósito de fichas</h3></div>
-      <div class="card-body">
-        <div class="alert alert-warning" style="margin-bottom:20px">
-          ⚠️ Bajar el límite es inmediato. <strong>Subir el límite requiere 24 horas de espera</strong> (cooldown de seguridad).
-        </div>
-        <div id="limites-form">Cargando límites...</div>
+    <div class="alert alert-warning">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>Bajar el limite es <strong>inmediato</strong>. Subirlo requiere <strong>24 horas de espera</strong> por seguridad.</span>
+    </div>
+    <div id="limites-wrap">
+      <div style="text-align:center;padding:40px;color:var(--text-3)">
+        <i class="fa-solid fa-spinner fa-spin"></i> Cargando limites...
       </div>
     </div>
   </div>
 
-  <!-- AUTOEXCLUSIÓN -->
+  <!-- PANEL AUTOEXCLUSION -->
   <div id="panel-exclusion" style="display:none">
-    <div class="card">
-      <div class="card-header"><h3>🚫 Autoexclusión</h3></div>
-      <div class="card-body">
-        <div class="alert alert-warning" style="margin-bottom:20px">
-          ⚠️ La autoexclusión es <strong>irreversible antes del plazo elegido</strong>. No podrás apostar durante el período seleccionado.
-        </div>
-        <div style="font-size:15px;font-weight:600;margin-bottom:16px">Elige el período de autoexclusión:</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px">
-          <button class="btn btn-outline" style="flex-direction:column;padding:20px;gap:4px" onclick="solicitarExclusion('temporal_7')">
-            <span style="font-size:24px">7</span><span style="font-size:12px">días</span>
-          </button>
-          <button class="btn btn-outline" style="flex-direction:column;padding:20px;gap:4px" onclick="solicitarExclusion('temporal_30')">
-            <span style="font-size:24px">30</span><span style="font-size:12px">días</span>
-          </button>
-          <button class="btn btn-outline" style="flex-direction:column;padding:20px;gap:4px" onclick="solicitarExclusion('temporal_90')">
-            <span style="font-size:24px">90</span><span style="font-size:12px">días</span>
-          </button>
-          <button class="btn btn-outline" style="flex-direction:column;padding:20px;gap:4px;border-color:var(--red);color:var(--red)" onclick="solicitarExclusion('indefinida')">
-            <span style="font-size:24px">∞</span><span style="font-size:12px">Indefinida</span>
-          </button>
-        </div>
-        <div id="exclusion-status"></div>
+    <div class="alert alert-danger">
+      <i class="fa-solid fa-ban"></i>
+      <span>La autoexclusion es <strong>irreversible antes del plazo elegido</strong>. No podras apostar durante ese periodo.</span>
+    </div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Selecciona el periodo de autoexclusion:</div>
+    <div class="excl-grid">
+      <div class="excl-card" onclick="solicitarExclusion('temporal_7')">
+        <div class="ec-num">7</div>
+        <div class="ec-unit">dias</div>
+      </div>
+      <div class="excl-card" onclick="solicitarExclusion('temporal_30')">
+        <div class="ec-num">30</div>
+        <div class="ec-unit">dias</div>
+      </div>
+      <div class="excl-card" onclick="solicitarExclusion('temporal_90')">
+        <div class="ec-num">90</div>
+        <div class="ec-unit">dias</div>
+      </div>
+      <div class="excl-card danger" onclick="solicitarExclusion('indefinida')">
+        <div class="ec-num" style="color:var(--red-lt)">Indef.</div>
+        <div class="ec-unit">Sin plazo</div>
       </div>
     </div>
+    <div id="excl-status" style="margin-top:16px"></div>
+    <div style="margin-top:24px">
+      <div style="font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:12px">
+        <i class="fa-solid fa-clock-rotate-left"></i> Historial de autoexclusiones
+      </div>
+      <div id="excl-historial" style="color:var(--text-3);font-size:13px">Cargando...</div>
+    </div>
   </div>
+
 </div>
 
-<!-- MODAL RECARGAR/RETIRAR -->
-<div class="modal-overlay" id="modal" style="display:none" onclick="if(event.target===this)cerrarModal()">
-  <div class="modal">
+<!-- MODAL OPERACION -->
+<div class="modal-bg" id="modal-op" style="display:none" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal-box">
     <h3 id="modal-title">Recargar fichas</h3>
     <p id="modal-desc">Las fichas son virtuales y no tienen valor monetario real.</p>
     <div class="form-group">
-      <label>Monto (S/)</label>
+      <label class="form-label"><i class="fa-solid fa-coins"></i> Monto (S/)</label>
       <input id="modal-monto" type="number" class="form-control" placeholder="Ej: 100" min="1" step="1"/>
     </div>
-    <div id="modal-error" class="form-error" style="display:none"></div>
-    <div class="modal-btns">
-      <button class="btn btn-outline" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn btn-primary" id="modal-btn" onclick="confirmarOperacion()">Confirmar</button>
+    <div id="modal-err" class="form-error" style="display:none">
+      <i class="fa-solid fa-circle-xmark"></i><span id="modal-err-txt"></span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="modal-btn" onclick="ejecutarOperacion()">Confirmar</button>
     </div>
   </div>
 </div>
@@ -128,7 +160,7 @@
 
 {% block extra_js %}
 <script>
-let operacionActual = '';
+let opActual = '';
 
 document.addEventListener('DOMContentLoaded', () => {
   if (!isLoggedIn()) { window.location.href = '/login/'; return; }
@@ -139,138 +171,195 @@ async function cargarSaldo() {
   const res = await apiFetch('/api/wallet/saldo/');
   if (!res?.ok) return;
   const d = await res.json();
-  document.getElementById('saldo-display').textContent = `S/ ${parseFloat(d.saldo_disponible).toFixed(2)}`;
-  document.getElementById('saldo-bloqueado').textContent = `Bloqueado en apuestas: S/ ${parseFloat(d.saldo_bloqueado||0).toFixed(2)}`;
-  const navSaldo = document.getElementById('nav-saldo');
-  if (navSaldo) navSaldo.textContent = `S/ ${parseFloat(d.saldo_disponible).toFixed(2)}`;
+  document.getElementById('bal-disp').textContent = `S/ ${parseFloat(d.saldo_disponible).toFixed(2)}`;
+  document.getElementById('bal-bloq').innerHTML =
+    `<i class="fa-solid fa-lock"></i> Bloqueado en apuestas: S/ ${parseFloat(d.saldo_bloqueado||0).toFixed(2)}`;
+  const nav = document.getElementById('nav-balance-val');
+  if (nav) nav.textContent = `S/ ${parseFloat(d.saldo_disponible).toFixed(2)}`;
 }
 
 async function cargarResumen() {
-  const ahora = new Date();
-  const res = await apiFetch(`/api/wallet/resumen/?mes=${ahora.getMonth()+1}&anio=${ahora.getFullYear()}`);
+  const n = new Date();
+  const res = await apiFetch(`/api/wallet/resumen/?mes=${n.getMonth()+1}&anio=${n.getFullYear()}`);
   if (!res?.ok) return;
   const d = await res.json();
-  document.getElementById('stat-recargado').textContent = `S/ ${parseFloat(d.total_recargado).toFixed(2)}`;
-  document.getElementById('stat-apostado').textContent = `S/ ${parseFloat(d.total_apostado).toFixed(2)}`;
-  document.getElementById('stat-ganado').textContent = `S/ ${parseFloat(d.total_ganado).toFixed(2)}`;
+  document.getElementById('s-recargado').textContent = `S/ ${parseFloat(d.total_recargado).toFixed(2)}`;
+  document.getElementById('s-apostado').textContent  = `S/ ${parseFloat(d.total_apostado).toFixed(2)}`;
+  document.getElementById('s-ganado').textContent    = `S/ ${parseFloat(d.total_ganado).toFixed(2)}`;
   const bal = parseFloat(d.balance_neto);
-  const balEl = document.getElementById('stat-balance');
-  balEl.textContent = `S/ ${bal.toFixed(2)}`;
-  balEl.style.color = bal >= 0 ? 'var(--green)' : 'var(--red)';
+  const el  = document.getElementById('s-balance');
+  el.textContent = `S/ ${bal.toFixed(2)}`;
+  el.className = `value ${bal>=0?'c-green':'c-red'}`;
 }
 
 async function cargarHistorial() {
   const res = await apiFetch('/api/wallet/historial/');
   if (!res?.ok) return;
   const datos = await res.json();
-  const tbody = document.getElementById('historial-body');
+  const tbody = document.getElementById('hist-body');
   if (!datos.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text3)">Sin movimientos aún</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-3)">
+      <i class="fa-solid fa-inbox" style="font-size:28px;display:block;margin-bottom:8px"></i>
+      Sin movimientos aun
+    </td></tr>`;
     return;
   }
-  const tipos = { recarga:'➕ Recarga', retiro:'💸 Retiro', apuesta:'🎯 Apuesta', pago_ganancia:'🏆 Premio', perdida:'❌ Pérdida', devolucion:'↩️ Devolución', cash_out:'💰 Cash-out', bono:'🎁 Bono' };
-  tbody.innerHTML = datos.map(e => `
-    <tr>
-      <td>${tipos[e.tipo_referencia] || e.tipo_referencia}</td>
-      <td><span class="badge ${e.direccion==='CREDITO'?'badge-green':'badge-red'}">${e.direccion==='CREDITO'?'▲ Entrada':'▼ Salida'}</span></td>
-      <td class="${e.direccion==='CREDITO'?'text-green':'text-red'}" style="font-weight:700;font-family:monospace">${e.direccion==='CREDITO'?'+':'-'} S/ ${parseFloat(e.monto).toFixed(2)}</td>
-      <td style="color:var(--text2);font-size:12px">${new Date(e.creado_en).toLocaleString('es-PE')}</td>
-    </tr>`).join('');
+  const tipos = {
+    recarga:'Recarga', retiro:'Retiro', apuesta:'Apuesta',
+    pago_ganancia:'Premio', perdida:'Perdida', devolucion:'Devolucion',
+    cash_out:'Cash-out', bono:'Bono'
+  };
+  tbody.innerHTML = datos.map(e => {
+    const esCred = e.direccion === 'CREDITO';
+    return `<tr>
+      <td style="font-weight:500">${tipos[e.tipo_referencia]||e.tipo_referencia}</td>
+      <td>
+        <span class="badge ${esCred?'badge-green':'badge-red'}">
+          <i class="fa-solid fa-arrow-${esCred?'down':'up'}"></i>
+          ${esCred?'Entrada':'Salida'}
+        </span>
+      </td>
+      <td style="font-weight:700;font-variant-numeric:tabular-nums;color:${esCred?'var(--green)':'var(--red-lt)'}">
+        ${esCred?'+':'-'} S/ ${parseFloat(e.monto).toFixed(2)}
+      </td>
+      <td style="color:var(--text-3);font-size:12px">${new Date(e.creado_en).toLocaleString('es-PE')}</td>
+    </tr>`;
+  }).join('');
 }
 
 async function cargarLimites() {
   const res = await apiFetch('/api/usuarios/limites/');
   if (!res?.ok) return;
   const d = await res.json();
-  document.getElementById('limites-form').innerHTML = `
-    <div style="display:grid;gap:20px">
-      ${renderLimite('diario', 'Límite diario', d.limite_diario)}
-      ${renderLimite('semanal', 'Límite semanal', d.limite_semanal)}
-      ${renderLimite('mensual', 'Límite mensual', d.limite_mensual)}
-    </div>`;
+  const campos = [
+    { key:'limite_diario',   label:'Limite diario',   icon:'fa-sun' },
+    { key:'limite_semanal',  label:'Limite semanal',  icon:'fa-calendar-week' },
+    { key:'limite_mensual',  label:'Limite mensual',  icon:'fa-calendar' },
+  ];
+  document.getElementById('limites-wrap').innerHTML = campos.map(c => `
+    <div class="limit-card">
+      <div class="lc-header">
+        <div class="lc-label">
+          <i class="fa-solid ${c.icon}" style="color:var(--primary)"></i> ${c.label}
+        </div>
+        <div class="lc-value">S/ ${parseFloat(d[c.key]).toFixed(2)}</div>
+      </div>
+      <div class="limit-input-row">
+        <input type="number" id="inp-${c.key}" class="form-control" value="${parseFloat(d[c.key]).toFixed(0)}" min="1"/>
+        <button class="btn btn-primary btn-sm" onclick="actualizarLimite('${c.key}')">
+          <i class="fa-solid fa-check"></i> Actualizar
+        </button>
+      </div>
+    </div>`).join('');
 }
 
-function renderLimite(tipo, label, valor) {
-  return `
-    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <span style="font-weight:600">${label}</span>
-        <span style="font-size:20px;font-weight:900;color:var(--primary)">S/ ${parseFloat(valor).toFixed(2)}</span>
-      </div>
-      <div style="display:flex;gap:8px">
-        <input type="number" id="limite-${tipo}" class="form-control" style="flex:1" placeholder="Nuevo monto" value="${parseFloat(valor).toFixed(0)}"/>
-        <button class="btn btn-primary btn-sm" onclick="actualizarLimite('${tipo}')">Actualizar</button>
-      </div>
-    </div>`;
-}
-
-async function actualizarLimite(tipo) {
-  const campo = `limite_${tipo}`;
-  const valor = document.getElementById(`limite-${tipo}`).value;
+async function actualizarLimite(campo) {
+  const val = document.getElementById(`inp-${campo}`).value;
   const res = await apiFetch('/api/usuarios/limites/', {
-    method: 'PATCH',
-    body: JSON.stringify({ [campo]: parseFloat(valor).toFixed(4) })
+    method:'PATCH', body: JSON.stringify({ [campo]: parseFloat(val).toFixed(4) })
   });
   const d = await res.json();
-  if (res.ok) { toast('Límite actualizado correctamente', 'success'); cargarLimites(); }
+  if (res.ok) { toast('Limite actualizado correctamente', 'success'); cargarLimites(); }
   else toast(d[campo]?.[0] || d.detail || 'Error al actualizar', 'error');
 }
 
+async function cargarExclusiones() {
+  const res = await apiFetch('/api/usuarios/autoexclusiones/');
+  if (!res?.ok) return;
+  const lista = await res.json();
+  const el = document.getElementById('excl-historial');
+  if (!lista.length) { el.textContent = 'Sin autoexclusiones registradas.'; return; }
+  el.innerHTML = lista.map(e => `
+    <div style="background:var(--bg-hover);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <span style="font-weight:600">${e.tipo}</span>
+        <span style="color:var(--text-3);font-size:12px;margin-left:10px">
+          Inicio: ${new Date(e.fecha_inicio).toLocaleDateString('es-PE')}
+        </span>
+      </div>
+      <span class="badge ${e.esta_activa?'badge-red':'badge-gray'}">
+        ${e.esta_activa?'Activa':'Finalizada'}
+      </span>
+    </div>`).join('');
+}
+
 async function solicitarExclusion(tipo) {
-  const labels = { temporal_7:'7 días', temporal_30:'30 días', temporal_90:'90 días', indefinida:'indefinida' };
-  if (!confirm(`¿Confirmas la autoexclusión ${labels[tipo]}? Esta acción no se puede revertir antes del plazo.`)) return;
-  const res = await apiFetch('/api/usuarios/autoexclusion/', {
-    method: 'POST', body: JSON.stringify({ tipo })
-  });
+  const labels = { temporal_7:'7 dias', temporal_30:'30 dias', temporal_90:'90 dias', indefinida:'indefinida' };
+  if (!confirm(`Confirmas la autoexclusion ${labels[tipo]}?\nEsta accion no se puede revertir antes del plazo.`)) return;
+  const res = await apiFetch('/api/usuarios/autoexclusion/', { method:'POST', body:JSON.stringify({ tipo }) });
   const d = await res.json();
   if (res.ok) {
-    document.getElementById('exclusion-status').innerHTML = `<div class="form-success">✅ Autoexclusión ${labels[tipo]} activada. Hasta: ${d.fecha_fin ? new Date(d.fecha_fin).toLocaleDateString('es-PE') : 'indefinido'}</div>`;
-    toast('Autoexclusión activada', 'success');
+    document.getElementById('excl-status').innerHTML = `
+      <div class="form-success">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>Autoexclusion ${labels[tipo]} activada.
+          ${d.fecha_fin ? 'Hasta: ' + new Date(d.fecha_fin).toLocaleDateString('es-PE') : 'Sin fecha de fin.'}
+        </span>
+      </div>`;
+    toast('Autoexclusion activada', 'success');
     setTimeout(() => window.location.href = '/login/', 2000);
   } else toast(d.detail || d.tipo?.[0] || 'Error', 'error');
 }
 
 function cambiarTab(tab) {
   ['historial','limites','exclusion'].forEach(t => {
-    document.getElementById(`panel-${t}`).style.display = t === tab ? 'block' : 'none';
-    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`panel-${t}`).style.display = t===tab ? 'block' : 'none';
+    document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
   });
-  if (tab === 'limites') cargarLimites();
+  if (tab==='limites')   cargarLimites();
+  if (tab==='exclusion') cargarExclusiones();
 }
 
 function abrirModal(op) {
-  operacionActual = op;
-  document.getElementById('modal-title').textContent = op === 'recargar' ? '➕ Recargar fichas' : '💸 Retirar fichas';
-  document.getElementById('modal-desc').textContent = op === 'recargar'
-    ? 'Las fichas son virtuales y no tienen valor monetario real. Límite diario: S/ 500.'
+  opActual = op;
+  document.getElementById('modal-title').textContent = op==='recargar' ? 'Recargar fichas' : 'Retirar fichas';
+  document.getElementById('modal-desc').textContent  = op==='recargar'
+    ? 'Las fichas son virtuales sin valor real. Limite diario: S/ 500.'
     : 'Retira fichas disponibles de tu wallet virtual.';
-  document.getElementById('modal-btn').textContent = op === 'recargar' ? 'Recargar' : 'Retirar';
+  document.getElementById('modal-btn').innerHTML =
+    op==='recargar'
+      ? '<i class="fa-solid fa-plus"></i> Recargar'
+      : '<i class="fa-solid fa-arrow-up-from-bracket"></i> Retirar';
   document.getElementById('modal-monto').value = '';
-  document.getElementById('modal-error').style.display = 'none';
-  document.getElementById('modal').style.display = 'flex';
+  document.getElementById('modal-err').style.display = 'none';
+  document.getElementById('modal-op').style.display  = 'flex';
 }
 
-function cerrarModal() { document.getElementById('modal').style.display = 'none'; }
+function cerrarModal() { document.getElementById('modal-op').style.display = 'none'; }
 
-async function confirmarOperacion() {
+async function ejecutarOperacion() {
   const monto = parseFloat(document.getElementById('modal-monto').value);
-  const errEl = document.getElementById('modal-error');
+  const errEl = document.getElementById('modal-err');
   errEl.style.display = 'none';
-  if (!monto || monto <= 0) { errEl.textContent = 'Ingresa un monto válido'; errEl.style.display = 'block'; return; }
-
-  const endpoint = operacionActual === 'recargar' ? '/api/wallet/recargar/' : '/api/wallet/retirar/';
+  if (!monto || monto <= 0) {
+    document.getElementById('modal-err-txt').textContent = 'Ingresa un monto valido';
+    errEl.style.display = 'flex'; return;
+  }
+  const endpoint = opActual==='recargar' ? '/api/wallet/recargar/' : '/api/wallet/retirar/';
   const btn = document.getElementById('modal-btn');
-  btn.disabled = true; btn.textContent = 'Procesando...';
-
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
   try {
-    const res = await apiFetch(endpoint, { method:'POST', body: JSON.stringify({ monto: monto.toFixed(4), id_transaccion: crypto.randomUUID() }) });
+    const res = await apiFetch(endpoint, {
+      method:'POST', body: JSON.stringify({ monto: monto.toFixed(4), id_transaccion: crypto.randomUUID() })
+    });
     const d = await res.json();
     if (res.ok) {
-      cerrarModal(); toast(`${operacionActual === 'recargar' ? 'Recarga' : 'Retiro'} exitoso`, 'success');
+      cerrarModal();
+      toast(`${opActual==='recargar'?'Recarga':'Retiro'} exitoso: S/ ${monto.toFixed(2)}`, 'success');
       cargarSaldo(); cargarResumen(); cargarHistorial();
-    } else { errEl.textContent = d.error || d.detail || 'Error en la operación'; errEl.style.display = 'block'; }
-  } catch { errEl.textContent = 'Error de conexión'; errEl.style.display = 'block'; }
-  finally { btn.disabled = false; btn.textContent = operacionActual === 'recargar' ? 'Recargar' : 'Retirar'; }
+    } else {
+      document.getElementById('modal-err-txt').textContent = d.error || d.detail || 'Error en la operacion';
+      errEl.style.display = 'flex';
+    }
+  } catch {
+    document.getElementById('modal-err-txt').textContent = 'Error de conexion';
+    errEl.style.display = 'flex';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = opActual==='recargar'
+      ? '<i class="fa-solid fa-plus"></i> Recargar'
+      : '<i class="fa-solid fa-arrow-up-from-bracket"></i> Retirar';
+  }
 }
 </script>
 {% endblock %}

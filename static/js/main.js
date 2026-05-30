@@ -1,18 +1,16 @@
-// FairBet Lab — Frontend principal
-const API = '';
-let accessToken = localStorage.getItem('fb_access');
+// FairBet Lab — Core JS
+let accessToken  = localStorage.getItem('fb_access');
 let refreshToken = localStorage.getItem('fb_refresh');
-let userData = JSON.parse(localStorage.getItem('fb_user') || 'null');
-let betslip = JSON.parse(localStorage.getItem('fb_betslip') || '[]');
+let betslip      = JSON.parse(localStorage.getItem('fb_betslip') || '[]');
 
-// ── Auth helpers ──────────────────────────────────────────────────────────────
-async function apiFetch(url, options = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+// ── API ────────────────────────────────────────────────────────────────────────
+async function apiFetch(url, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
   if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
-  let res = await fetch(API + url, { ...options, headers });
+  let res = await fetch(url, { ...opts, headers });
 
   if (res.status === 401 && refreshToken) {
-    const r = await fetch(API + '/api/usuarios/login/refresh/', {
+    const r = await fetch('/api/usuarios/login/refresh/', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh: refreshToken })
     });
@@ -21,177 +19,178 @@ async function apiFetch(url, options = {}) {
       accessToken = d.access;
       localStorage.setItem('fb_access', accessToken);
       headers['Authorization'] = `Bearer ${accessToken}`;
-      res = await fetch(API + url, { ...options, headers });
+      res = await fetch(url, { ...opts, headers });
     } else { logout(); return null; }
   }
   return res;
 }
+
+function isLoggedIn() { return !!accessToken; }
 
 function logout() {
   localStorage.removeItem('fb_access');
   localStorage.removeItem('fb_refresh');
   localStorage.removeItem('fb_user');
   localStorage.removeItem('fb_betslip');
+  betslip = [];
   window.location.href = '/login/';
 }
 
-function isLoggedIn() { return !!accessToken; }
-
-// ── Toast ─────────────────────────────────────────────────────────────────────
+// ── Toast ──────────────────────────────────────────────────────────────────────
 function toast(msg, type = 'info') {
-  let container = document.getElementById('toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toast-container';
-    container.className = 'toast-container';
-    document.body.appendChild(container);
-  }
+  const wrap = document.getElementById('toast-wrap');
+  if (!wrap) return;
+  const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
   const t = document.createElement('div');
-  const icons = { success: '✅', error: '❌', info: '🎯' };
   t.className = `toast ${type}`;
-  t.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
-  container.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+  t.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${msg}</span>`;
+  wrap.appendChild(t);
+  setTimeout(() => { t.style.transition = '.3s'; t.style.opacity = '0'; t.style.transform = 'translateX(30px)'; setTimeout(() => t.remove(), 320); }, 3000);
 }
 
-// ── Betslip ───────────────────────────────────────────────────────────────────
+// ── Betslip ────────────────────────────────────────────────────────────────────
 function saveBetslip() { localStorage.setItem('fb_betslip', JSON.stringify(betslip)); }
 
 function addToBetslip(cuotaId, seleccion, odds, evento, mercado) {
-  const exists = betslip.find(b => b.cuotaId === cuotaId);
-  if (exists) {
-    betslip = betslip.filter(b => b.cuotaId !== cuotaId);
+  const idx = betslip.findIndex(b => b.cuotaId === cuotaId);
+  if (idx !== -1) {
+    betslip.splice(idx, 1);
     document.querySelectorAll(`[data-cuota="${cuotaId}"]`).forEach(el => el.classList.remove('selected'));
-    saveBetslip(); renderBetslip(); return;
+  } else {
+    betslip.push({ cuotaId, seleccion, odds: parseFloat(odds), evento, mercado });
+    document.querySelectorAll(`[data-cuota="${cuotaId}"]`).forEach(el => el.classList.add('selected'));
+    toast(`${seleccion} agregado al ticket`, 'info');
   }
-  betslip.push({ cuotaId, seleccion, odds, evento, mercado });
-  document.querySelectorAll(`[data-cuota="${cuotaId}"]`).forEach(el => el.classList.add('selected'));
-  saveBetslip(); renderBetslip();
-  toast(`${seleccion} @ ${odds} agregado al ticket`, 'success');
+  saveBetslip();
+  renderBetslip();
 }
 
 function removeFromBetslip(cuotaId) {
   betslip = betslip.filter(b => b.cuotaId !== cuotaId);
   document.querySelectorAll(`[data-cuota="${cuotaId}"]`).forEach(el => el.classList.remove('selected'));
-  saveBetslip(); renderBetslip();
+  saveBetslip();
+  renderBetslip();
 }
 
 function renderBetslip() {
-  const body = document.getElementById('betslip-body');
-  const footer = document.getElementById('betslip-footer');
-  const count = document.getElementById('betslip-count');
-  if (!body) return;
-  if (count) count.textContent = betslip.length || '';
+  const body   = document.getElementById('bs-body');
+  const foot   = document.getElementById('bs-foot');
+  const countEl = document.getElementById('bs-count');
 
-  if (betslip.length === 0) {
-    body.innerHTML = `<div class="betslip-empty"><div class="icon">🎯</div><p>Selecciona una cuota para apostar</p></div>`;
-    if (footer) footer.style.display = 'none';
+  if (countEl) countEl.textContent = betslip.length || '';
+  if (!body) return;
+
+  if (!betslip.length) {
+    body.innerHTML = `
+      <div class="betslip-empty">
+        <i class="fa-solid fa-ticket"></i>
+        <p>Selecciona una cuota para<br/>agregar al ticket</p>
+      </div>`;
+    if (foot) foot.style.display = 'none';
     return;
   }
 
   body.innerHTML = betslip.map(b => `
-    <div class="betslip-item">
-      <button class="remove" onclick="removeFromBetslip(${b.cuotaId})">✕</button>
-      <div class="bi-evento">${b.evento}</div>
-      <div class="bi-seleccion">${b.seleccion}</div>
-      <div class="bi-odds">@ ${b.odds}</div>
-    </div>
-  `).join('');
+    <div class="bs-item">
+      <button class="bs-remove" onclick="removeFromBetslip(${b.cuotaId})">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="bs-evento">${b.evento}</div>
+      <div class="bs-seleccion">${b.seleccion}</div>
+      <div class="bs-odds">@ ${b.odds.toFixed(2)}</div>
+    </div>`).join('');
 
-  if (footer) footer.style.display = 'block';
-  calcularBetslip();
+  if (foot) foot.style.display = 'block';
+  calcBetslip();
 }
 
-function calcularBetslip() {
-  const montoInput = document.getElementById('monto-apuesta');
-  const gananciaEl = document.getElementById('ganancia-potencial');
-  const totalOddsEl = document.getElementById('total-odds');
-  if (!montoInput || !gananciaEl) return;
-
-  const monto = parseFloat(montoInput.value) || 0;
-  const totalOdds = betslip.reduce((acc, b) => acc * parseFloat(b.odds), 1);
-  const ganancia = (monto * totalOdds).toFixed(2);
-
-  if (totalOddsEl) totalOddsEl.textContent = totalOdds.toFixed(2);
-  gananciaEl.textContent = `S/ ${ganancia}`;
+function calcBetslip() {
+  const mi = document.getElementById('bs-monto');
+  const gi = document.getElementById('bs-ganancia');
+  const ti = document.getElementById('bs-odds-total');
+  if (!mi) return;
+  const monto = parseFloat(mi.value) || 0;
+  const totalOdds = betslip.reduce((acc, b) => acc * b.odds, 1);
+  if (ti) ti.textContent = totalOdds.toFixed(2);
+  if (gi) gi.textContent = `S/ ${(monto * totalOdds).toFixed(2)}`;
 }
 
 async function confirmarApuesta() {
   if (!isLoggedIn()) { window.location.href = '/login/'; return; }
-  if (betslip.length === 0) { toast('Agrega al menos una selección', 'error'); return; }
-
-  const monto = parseFloat(document.getElementById('monto-apuesta')?.value || 0);
-  if (monto <= 0) { toast('Ingresa un monto válido', 'error'); return; }
+  if (!betslip.length) { toast('Agrega al menos una seleccion al ticket', 'error'); return; }
+  const monto = parseFloat(document.getElementById('bs-monto')?.value || 0);
+  if (monto <= 0) { toast('Ingresa un monto valido', 'error'); return; }
 
   const btn = document.getElementById('btn-apostar');
-  if (btn) { btn.disabled = true; btn.textContent = 'Procesando...'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...'; }
 
   try {
+    let res, data;
     if (betslip.length === 1) {
-      const b = betslip[0];
-      const res = await apiFetch('/api/apuestas/', {
+      res = await apiFetch('/api/apuestas/', {
         method: 'POST',
-        body: JSON.stringify({ cuota_id: b.cuotaId, monto: monto.toFixed(4), clave_idempotencia: crypto.randomUUID() })
+        body: JSON.stringify({ cuota_id: betslip[0].cuotaId, monto: monto.toFixed(4), clave_idempotencia: crypto.randomUUID() })
       });
-      const data = await res.json();
-      if (res.ok) {
-        toast(`¡Apuesta confirmada! Pago potencial: S/ ${data.apuesta.pago_potencial}`, 'success');
-        betslip = []; saveBetslip(); renderBetslip();
-        actualizarSaldo();
-      } else {
-        toast(data.error || 'Error al procesar la apuesta', 'error');
-      }
+      data = await res.json();
     } else {
-      const res = await apiFetch('/api/apuestas/combinada/', {
+      res = await apiFetch('/api/apuestas/combinada/', {
         method: 'POST',
         body: JSON.stringify({ cuota_ids: betslip.map(b => b.cuotaId), monto: monto.toFixed(4), clave_idempotencia: crypto.randomUUID() })
       });
-      const data = await res.json();
-      if (res.ok) {
-        toast(`¡Combinada confirmada! Pago potencial: S/ ${data.combinada.pago_potencial}`, 'success');
-        betslip = []; saveBetslip(); renderBetslip();
-        actualizarSaldo();
-      } else {
-        toast(data.error || 'Error al procesar la apuesta', 'error');
-      }
+      data = await res.json();
     }
-  } catch (e) {
-    toast('Error de conexión', 'error');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '✅ Confirmar Apuesta'; }
+
+    if (res?.ok) {
+      const pago = data.apuesta?.pago_potencial || data.combinada?.pago_potencial || '0';
+      toast(`Apuesta confirmada. Potencial: S/ ${parseFloat(pago).toFixed(2)}`, 'success');
+      betslip = []; saveBetslip(); renderBetslip();
+      actualizarSaldo();
+    } else {
+      toast(data.error || data.detail || 'Error al procesar la apuesta', 'error');
+    }
+  } catch { toast('Error de conexion', 'error'); }
+  finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar Apuesta'; }
   }
 }
 
+// ── Navbar dinámico ────────────────────────────────────────────────────────────
 async function actualizarSaldo() {
   if (!isLoggedIn()) return;
   const res = await apiFetch('/api/wallet/saldo/');
-  if (!res || !res.ok) return;
-  const data = await res.json();
-  const el = document.getElementById('nav-saldo');
-  if (el) el.textContent = `S/ ${parseFloat(data.saldo_disponible).toFixed(2)}`;
+  if (!res?.ok) return;
+  const d = await res.json();
+  const el = document.getElementById('nav-balance-val');
+  if (el) el.textContent = `S/ ${parseFloat(d.saldo_disponible).toFixed(2)}`;
 }
 
-// ── Navbar dinámico ───────────────────────────────────────────────────────────
 function renderNavbar() {
   const navRight = document.getElementById('nav-right');
   if (!navRight) return;
   if (isLoggedIn()) {
+    const user = JSON.parse(localStorage.getItem('fb_user') || '{}');
     navRight.innerHTML = `
-      <span class="nav-saldo" id="nav-saldo">S/ --</span>
-      <a href="/wallet/" class="btn btn-outline btn-sm">💰 Wallet</a>
-      <a href="/mis-apuestas/" class="btn btn-outline btn-sm">🎯 Mis Apuestas</a>
-      <button onclick="logout()" class="btn btn-outline btn-sm">Salir</button>
-    `;
+      <div class="nav-balance">
+        <i class="fa-solid fa-coins" style="color:var(--primary)"></i>
+        <span id="nav-balance-val">S/ --</span>
+      </div>
+      <a href="/wallet/" class="btn btn-ghost btn-sm">
+        <i class="fa-solid fa-plus"></i> Recargar
+      </a>
+      <a href="/mis-apuestas/" class="btn btn-ghost btn-sm">
+        <i class="fa-solid fa-user"></i> ${user.username || 'Mi cuenta'}
+      </a>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </button>`;
     actualizarSaldo();
   } else {
     navRight.innerHTML = `
-      <a href="/login/" class="btn btn-outline btn-sm">Iniciar Sesión</a>
-      <a href="/registro/" class="btn btn-primary btn-sm">Registrarse</a>
-    `;
+      <a href="/login/"    class="btn btn-ghost btn-sm">Iniciar sesion</a>
+      <a href="/registro/" class="btn btn-primary btn-sm">Registrarse</a>`;
   }
 }
 
-// ── Marcar cuotas ya en betslip ───────────────────────────────────────────────
 function marcarCuotasActivas() {
   betslip.forEach(b => {
     document.querySelectorAll(`[data-cuota="${b.cuotaId}"]`).forEach(el => el.classList.add('selected'));
@@ -202,6 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderNavbar();
   renderBetslip();
   marcarCuotasActivas();
-  const mi = document.getElementById('monto-apuesta');
-  if (mi) mi.addEventListener('input', calcularBetslip);
+  const mi = document.getElementById('bs-monto');
+  if (mi) mi.addEventListener('input', calcBetslip);
 });

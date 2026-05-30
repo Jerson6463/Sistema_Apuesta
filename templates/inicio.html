@@ -4,99 +4,106 @@
 {% block nav_inicio %}active{% endblock %}
 
 {% block content %}
-
-<!-- BANNER PRINCIPAL -->
-<div class="hero-banner">
-  <div class="hero-badge">🏆 Mundial 2026 · Cuotas en vivo</div>
-  <h1>Apuesta en los<br/><span>mejores partidos</span><br/>del mundo</h1>
-  <p>Plataforma educativa con fichas virtuales. Las mejores cuotas del Mundial 2026, apuestas simples, combinadas y en vivo.</p>
-  <div style="display:flex;gap:12px;flex-wrap:wrap">
-    <a href="/eventos/" class="btn btn-primary">⚽ Ver todos los eventos</a>
-    <a href="/registro/" class="btn btn-outline">Crear cuenta gratis</a>
+<div class="hero">
+  <div class="hero-tag"><i class="fa-solid fa-trophy"></i> Mundial 2026 &mdash; Cuotas en tiempo real</div>
+  <h1>Las mejores cuotas<br/>del <span>Mundial 2026</span></h1>
+  <p>Apuesta con fichas virtuales en los partidos mas importantes. Simple, combinada y en vivo.</p>
+  <div class="hero-btns">
+    <a href="/eventos/" class="btn btn-primary">
+      <i class="fa-solid fa-futbol"></i> Ver todos los eventos
+    </a>
+    <a href="/registro/" class="btn btn-ghost">
+      <i class="fa-solid fa-user-plus"></i> Crear cuenta gratis
+    </a>
   </div>
 </div>
 
-<!-- CONTENIDO PRINCIPAL -->
-<div class="page-layout">
+<div class="page-wrap">
 
-  <!-- SIDEBAR DEPORTES -->
-  <aside class="col-left">
-    <div class="card">
-      <div class="card-header"><h3>⚽ Deportes</h3></div>
-      <div class="card-body" style="padding:8px">
-        <div class="sport-item active" onclick="location.href='/eventos/'">
-          <span class="sport-icon">⚽</span> Fútbol <span class="sport-count">3</span>
-        </div>
-        <div class="sport-item" onclick="location.href='/eventos/?deporte=en_vivo'">
-          <span class="sport-icon">🔴</span> En Vivo <span class="sport-count live-dot" style="width:8px;height:8px;background:#ef4444;border-radius:50%;display:inline-block;animation:pulse 1s infinite"></span>
-        </div>
-        <div class="divider"></div>
-        <div style="padding:8px 10px;font-size:12px;color:var(--text3);font-weight:600">COMPETICIONES</div>
-        <div class="sport-item"><span class="sport-icon">🌍</span> Mundial 2026 <span class="sport-count">3</span></div>
-        <div class="sport-item"><span class="sport-icon">🇵🇪</span> Liga 1 Perú</div>
-        <div class="sport-item"><span class="sport-icon">🇪🇸</span> La Liga</div>
-        <div class="sport-item"><span class="sport-icon">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span> Premier League</div>
-        <div class="sport-item"><span class="sport-icon">🇩🇪</span> Bundesliga</div>
-        <div class="divider"></div>
-        <div style="padding:8px 10px;font-size:12px;color:var(--text3);font-weight:600">JUEGO RESPONSABLE</div>
-        <a href="/wallet/#limites" class="sport-item" style="color:var(--yellow)">
-          <span class="sport-icon">🛡️</span> Mis límites
-        </a>
-        <a href="/wallet/#autoexclusion" class="sport-item" style="color:var(--red)">
-          <span class="sport-icon">🚫</span> Autoexclusión
-        </a>
+  <!-- SIDEBAR IZQUIERDO -->
+  <aside class="sidebar-left">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Deportes</div>
+      <div class="sidebar-item active" onclick="location.href='/eventos/'">
+        <i class="fa-solid fa-futbol"></i> Futbol
+        <span class="sidebar-count">3</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Competiciones</div>
+      <div class="sidebar-item" onclick="location.href='/eventos/'">
+        <i class="fa-solid fa-earth-americas"></i> Mundial 2026
+        <span class="sidebar-count">3</span>
+      </div>
+      <div class="sidebar-item">
+        <i class="fa-solid fa-shield"></i> Liga 1 Peru
+      </div>
+      <div class="sidebar-item">
+        <i class="fa-solid fa-shield"></i> La Liga
+      </div>
+      <div class="sidebar-item">
+        <i class="fa-solid fa-shield"></i> Premier League
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Juego Responsable</div>
+      <div class="sidebar-item" onclick="location.href='/wallet/#limites'" style="color:var(--primary)">
+        <i class="fa-solid fa-shield-halved"></i> Mis limites
+      </div>
+      <div class="sidebar-item" onclick="location.href='/wallet/#exclusion'" style="color:var(--red-lt)">
+        <i class="fa-solid fa-ban"></i> Autoexclusion
       </div>
     </div>
   </aside>
 
-  <!-- EVENTOS DESTACADOS -->
-  <main class="col-center">
-    <div class="section-title">🔥 Eventos destacados — Mundial 2026</div>
-
-    <div id="eventos-container">
-      <div style="text-align:center;padding:40px;color:var(--text2)">
-        <div style="font-size:32px;margin-bottom:10px">⚽</div>
+  <!-- CONTENIDO CENTRAL -->
+  <main class="main-content">
+    <div class="section-hdr">
+      <h2><i class="fa-solid fa-fire"></i> Eventos destacados</h2>
+      <a href="/eventos/" class="mas-mercados">
+        Ver todos <i class="fa-solid fa-chevron-right"></i>
+      </a>
+    </div>
+    <div id="eventos-wrap">
+      <div style="text-align:center;padding:60px 0;color:var(--text-3)">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:28px;display:block;margin-bottom:12px"></i>
         Cargando eventos...
       </div>
-    </div>
-
-    <div style="text-align:center;margin-top:20px">
-      <a href="/eventos/" class="btn btn-outline">Ver todos los eventos →</a>
     </div>
   </main>
 
   <!-- BETSLIP -->
-  <aside class="col-right">
-    <div class="card betslip">
-      <div class="card-header">
-        <h3>🎯 Mi Ticket <span id="betslip-count" style="background:var(--primary);color:#fff;padding:2px 7px;border-radius:10px;font-size:11px;margin-left:4px"></span></h3>
+  <aside class="sidebar-right">
+    <div class="betslip">
+      <div class="betslip-header">
+        <h3>
+          <i class="fa-solid fa-ticket"></i> Mi Ticket
+          <span class="bs-count" id="bs-count"></span>
+        </h3>
+        <button onclick="betslip=[];saveBetslip();renderBetslip()" style="color:var(--text-3);font-size:12px">
+          Limpiar
+        </button>
       </div>
-      <div class="betslip-tabs">
-        <div class="betslip-tab active">Simple / Combinada</div>
-      </div>
-      <div id="betslip-body"></div>
-      <div id="betslip-footer" style="display:none">
-        <div class="betslip-footer">
-          <div class="betslip-info">
-            <span>Cuota total</span><span class="val" id="total-odds">1.00</span>
+      <div id="bs-body"></div>
+      <div id="bs-foot" style="display:none">
+        <div class="betslip-foot">
+          <div class="bs-row">
+            <span>Cuota total</span>
+            <span class="val" id="bs-odds-total">1.00</span>
           </div>
-          <input type="number" class="monto-input" id="monto-apuesta" placeholder="Monto (S/)" min="1" step="1" value="10"/>
-          <div class="betslip-info">
-            <span>Ganancia potencial</span><span class="val text-green" id="ganancia-potencial">S/ 0.00</span>
+          <input type="number" id="bs-monto" class="bs-monto" placeholder="Monto en S/" min="1" step="1" value="10"/>
+          <div class="bs-row">
+            <span>Ganancia potencial</span>
+            <span class="val green" id="bs-ganancia">S/ 0.00</span>
           </div>
-          <button class="btn-apostar" id="btn-apostar" onclick="confirmarApuesta()">✅ Confirmar Apuesta</button>
-          <div class="aviso-responsable">🛡️ Apuesta con responsabilidad. Moneda virtual educativa.</div>
+          <button class="btn-apostar" id="btn-apostar" onclick="confirmarApuesta()">
+            <i class="fa-solid fa-check"></i> Confirmar Apuesta
+          </button>
+          <p class="bs-legal">
+            <i class="fa-solid fa-shield-halved"></i>
+            Apuesta con responsabilidad. Moneda virtual educativa sin valor real.
+          </p>
         </div>
-      </div>
-    </div>
-
-    <!-- PROMOCIONES -->
-    <div class="card" style="margin-top:16px">
-      <div class="card-header"><h3>🎁 Bono de bienvenida</h3></div>
-      <div class="card-body">
-        <div style="font-size:28px;font-weight:900;color:var(--primary);margin-bottom:6px">500 fichas</div>
-        <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Gratis al registrarte. Rollover x5 para retirar.</div>
-        <a href="/registro/" class="btn btn-primary" style="width:100%;justify-content:center">Reclamar ahora</a>
       </div>
     </div>
   </aside>
@@ -106,79 +113,110 @@
 
 {% block extra_js %}
 <script>
+const FLAGS = { Peru:'🇵🇪', Brasil:'🇧🇷', Argentina:'🇦🇷', Mexico:'🇲🇽', Uruguay:'🇺🇾', Colombia:'🇨🇴' };
+
 async function cargarEventos() {
   const token = localStorage.getItem('fb_access');
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-
+  if (!token) {
+    document.getElementById('eventos-wrap').innerHTML = `
+      <div class="alert alert-info">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Inicia sesion para ver las cuotas en tiempo real.
+          <a href="/login/" style="color:var(--primary);font-weight:700;margin-left:4px">Entrar</a>
+        </span>
+      </div>`;
+    return;
+  }
   try {
-    const res = await fetch('/api/eventos/', { headers });
+    const res = await apiFetch('/api/eventos/');
     if (!res.ok) throw new Error();
-    const eventos = await res.json();
-    renderEventos(eventos.slice(0, 3));
+    const evs = await res.json();
+    renderEventos(evs.slice(0, 3));
   } catch {
-    document.getElementById('eventos-container').innerHTML =
-      `<div class="alert alert-info">Inicia sesión para ver las cuotas en tiempo real. <a href="/login/" style="color:var(--primary);font-weight:700">Entrar →</a></div>`;
+    document.getElementById('eventos-wrap').innerHTML =
+      '<div class="alert alert-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Error al cargar eventos.</span></div>';
   }
 }
 
-function renderEventos(eventos) {
-  if (!eventos.length) {
-    document.getElementById('eventos-container').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2)">No hay eventos disponibles</div>';
+function renderEventos(evs) {
+  if (!evs.length) {
+    document.getElementById('eventos-wrap').innerHTML =
+      '<p style="text-align:center;padding:48px;color:var(--text-3)">No hay eventos disponibles.</p>';
     return;
   }
-  const html = eventos.map(ev => {
-    const mercado1x2 = ev.mercados?.find(m => m.tipo === '1X2');
-    const cuotas = mercado1x2?.cuotas || [];
-    const local = cuotas.find(c => c.seleccion === 'local');
-    const empate = cuotas.find(c => c.seleccion === 'empate');
-    const visitante = cuotas.find(c => c.seleccion === 'visitante');
-    const fecha = new Date(ev.fecha_inicio).toLocaleString('es-PE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-    const esVivo = ev.estado === 'en_vivo';
-
-    return `
-    <div class="evento-card">
-      <div class="evento-header">
-        <span class="liga">🌍 Mundial 2026 · Fase de Grupos</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          ${esVivo ? '<span class="live-badge"><span class="live-dot"></span>EN VIVO</span>' : `<span class="time">${fecha}</span>`}
-        </div>
-      </div>
-      <div class="evento-body">
-        <div class="equipos">
-          <div class="equipo">
-            <div class="equipo-name">${ev.equipo_local}</div>
-            <div class="equipo-sub">Local</div>
-          </div>
-          <div class="vs">VS</div>
-          <div class="equipo">
-            <div class="equipo-name">${ev.equipo_visitante}</div>
-            <div class="equipo-sub">Visitante</div>
-          </div>
-        </div>
-        ${mercado1x2 ? `
-        <div class="cuotas-row">
-          ${local ? `<div class="cuota-btn" data-cuota="${local.id}" onclick="addToBetslip(${local.id},'${ev.equipo_local}',${local.valor},'${ev.nombre}','1X2')">
-            <div class="label">1 · ${ev.equipo_local.substring(0,3).toUpperCase()}</div>
-            <div class="odds">${local.valor}</div>
-          </div>` : ''}
-          ${empate ? `<div class="cuota-btn" data-cuota="${empate.id}" onclick="addToBetslip(${empate.id},'Empate',${empate.valor},'${ev.nombre}','1X2')">
-            <div class="label">X · Empate</div>
-            <div class="odds">${empate.valor}</div>
-          </div>` : ''}
-          ${visitante ? `<div class="cuota-btn" data-cuota="${visitante.id}" onclick="addToBetslip(${visitante.id},'${ev.equipo_visitante}',${visitante.valor},'${ev.nombre}','1X2')">
-            <div class="label">2 · ${ev.equipo_visitante.substring(0,3).toUpperCase()}</div>
-            <div class="odds">${visitante.valor}</div>
-          </div>` : ''}
-        </div>
-        <div style="text-align:right;margin-top:10px">
-          <a href="/eventos/${ev.id}/" style="font-size:12px;color:var(--text2)">+${(ev.mercados?.length||1)*2} mercados →</a>
-        </div>` : `<div class="alert alert-info" style="margin:0"><a href="/login/">Inicia sesión</a> para ver cuotas</div>`}
-      </div>
-    </div>`;
-  }).join('');
-  document.getElementById('eventos-container').innerHTML = html;
+  document.getElementById('eventos-wrap').innerHTML = evs.map(ev => buildEventoCard(ev)).join('');
+  evs.forEach(ev => cargarCuotasEvento(ev.id, ev.nombre, ev.equipo_local, ev.equipo_visitante));
   marcarCuotasActivas();
+}
+
+function buildEventoCard(ev) {
+  const fecha = new Date(ev.fecha_inicio).toLocaleString('es-PE', { weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  const esVivo = ev.estado === 'en_vivo';
+  return `
+  <div class="evento-card">
+    <div class="evento-meta">
+      <span class="liga"><i class="fa-solid fa-earth-americas"></i> Mundial 2026 &middot; Fase de Grupos</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${esVivo ? '<span class="live-badge"><span class="live-dot"></span> EN VIVO</span>' : `<span><i class="fa-regular fa-clock"></i> ${fecha}</span>`}
+      </div>
+    </div>
+    <div class="evento-body">
+      <div class="equipos">
+        <div class="equipo">
+          <span class="equipo-flag">${FLAGS[ev.equipo_local] || ''}</span>
+          <div class="equipo-name">${ev.equipo_local}</div>
+          <div class="equipo-label">Local</div>
+        </div>
+        <div class="vs-badge">VS</div>
+        <div class="equipo">
+          <span class="equipo-flag">${FLAGS[ev.equipo_visitante] || ''}</span>
+          <div class="equipo-name">${ev.equipo_visitante}</div>
+          <div class="equipo-label">Visitante</div>
+        </div>
+      </div>
+      <div id="cuotas-ev-${ev.id}">
+        <div style="text-align:center;padding:16px;color:var(--text-3);font-size:13px">
+          <i class="fa-solid fa-spinner fa-spin"></i> Cargando cuotas...
+        </div>
+      </div>
+      <div class="evento-footer">
+        <a href="/eventos/${ev.id}/" class="mas-mercados">
+          Ver todos los mercados <i class="fa-solid fa-chevron-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function cargarCuotasEvento(id, nombre, local, visitante) {
+  try {
+    const res = await apiFetch(`/api/eventos/${id}/`);
+    if (!res.ok) return;
+    const ev = await res.json();
+    const m1x2 = ev.mercados?.find(m => m.tipo === '1X2');
+    if (!m1x2) return;
+    const L = m1x2.cuotas.find(c => c.seleccion === 'local');
+    const E = m1x2.cuotas.find(c => c.seleccion === 'empate');
+    const V = m1x2.cuotas.find(c => c.seleccion === 'visitante');
+    const el = document.getElementById(`cuotas-ev-${id}`);
+    if (!el) return;
+    el.innerHTML = `
+      <div class="mercado-label"><i class="fa-solid fa-1"></i>&nbsp;1X2 &mdash; Resultado del partido</div>
+      <div class="cuotas-row">
+        ${L ? cuotaHtml(L.id, local.substring(0,3).toUpperCase() + ' Gana', '1', L.valor, nombre, '1X2') : ''}
+        ${E ? cuotaHtml(E.id, 'Empate', 'X', E.valor, nombre, '1X2') : ''}
+        ${V ? cuotaHtml(V.id, visitante.substring(0,3).toUpperCase() + ' Gana', '2', V.valor, nombre, '1X2') : ''}
+      </div>`;
+    marcarCuotasActivas();
+  } catch {}
+}
+
+function cuotaHtml(id, sel, label, val, evento, mercado) {
+  return `<div class="cuota-btn" data-cuota="${id}"
+    onclick="addToBetslip(${id},'${sel}',${val},'${evento}','${mercado}')">
+    <div class="qlabel">${label}</div>
+    <div class="qval">${parseFloat(val).toFixed(2)}</div>
+  </div>`;
 }
 
 cargarEventos();

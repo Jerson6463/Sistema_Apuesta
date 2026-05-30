@@ -2,65 +2,81 @@
 {% block title %}Registro — FairBet Lab{% endblock %}
 
 {% block content %}
-<div class="auth-page">
-  <div class="auth-card" style="max-width:500px">
-    <h2>🎰 Crear cuenta</h2>
-    <p class="subtitle">Regístrate gratis y recibe 500 fichas virtuales de bienvenida</p>
+<div class="auth-wrap">
+  <div class="auth-box" style="max-width:500px">
 
-    <div id="msg-error" class="form-error" style="display:none"></div>
-    <div id="msg-success" class="form-success" style="display:none"></div>
+    <div class="auth-logo">
+      <i class="fa-solid fa-dice"></i> FairBet Lab
+    </div>
+
+    <h2>Crear Cuenta</h2>
+    <p class="subtitle">Registrate gratis y recibe 500 fichas virtuales de bienvenida</p>
+
+    <div id="msg-error" class="form-error" style="display:none">
+      <i class="fa-solid fa-circle-xmark"></i>
+      <span id="error-text"></span>
+    </div>
+    <div id="msg-ok" class="form-success" style="display:none">
+      <i class="fa-solid fa-circle-check"></i>
+      <span id="ok-text"></span>
+    </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label>Nombre</label>
-        <input id="first_name" type="text" class="form-control" placeholder="Nombre"/>
+        <label class="form-label">Nombre</label>
+        <input id="f-nombre" type="text" class="form-control" placeholder="Tu nombre"/>
       </div>
       <div class="form-group">
-        <label>Apellido</label>
-        <input id="last_name" type="text" class="form-control" placeholder="Apellido"/>
+        <label class="form-label">Apellido</label>
+        <input id="f-apellido" type="text" class="form-control" placeholder="Tu apellido"/>
       </div>
     </div>
 
     <div class="form-group">
-      <label>Usuario</label>
-      <input id="username" type="text" class="form-control" placeholder="Nombre de usuario único"/>
+      <label class="form-label"><i class="fa-solid fa-user"></i> Usuario</label>
+      <input id="f-username" type="text" class="form-control" placeholder="Nombre de usuario unico"/>
     </div>
 
     <div class="form-group">
-      <label>Correo electrónico</label>
-      <input id="email" type="email" class="form-control" placeholder="correo@ejemplo.com"/>
+      <label class="form-label"><i class="fa-solid fa-envelope"></i> Correo electronico</label>
+      <input id="f-email" type="email" class="form-control" placeholder="correo@ejemplo.com"/>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label>DNI peruano</label>
-        <input id="dni" type="text" class="form-control" placeholder="12345678" maxlength="8"/>
+        <label class="form-label"><i class="fa-solid fa-id-card"></i> DNI peruano</label>
+        <input id="f-dni" type="text" class="form-control" placeholder="12345678" maxlength="8"/>
+        <div class="form-hint"><i class="fa-solid fa-circle-info"></i> 8 digitos numericos</div>
       </div>
       <div class="form-group">
-        <label>Fecha de nacimiento</label>
-        <input id="fecha_nacimiento" type="date" class="form-control"/>
+        <label class="form-label"><i class="fa-solid fa-calendar"></i> Fecha de nacimiento</label>
+        <input id="f-fecha" type="date" class="form-control"/>
+        <div class="form-hint"><i class="fa-solid fa-circle-info"></i> Debes ser mayor de 18 anos</div>
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label>Contraseña</label>
-        <input id="password" type="password" class="form-control" placeholder="Mínimo 8 caracteres"/>
+        <label class="form-label"><i class="fa-solid fa-lock"></i> Contrasena</label>
+        <input id="f-pass" type="password" class="form-control" placeholder="Minimo 8 caracteres"/>
       </div>
       <div class="form-group">
-        <label>Confirmar contraseña</label>
-        <input id="password2" type="password" class="form-control" placeholder="Repetir contraseña"/>
+        <label class="form-label"><i class="fa-solid fa-lock"></i> Confirmar</label>
+        <input id="f-pass2" type="password" class="form-control" placeholder="Repetir contrasena"/>
       </div>
     </div>
 
-    <div class="alert alert-warning" style="font-size:12px;margin-bottom:16px">
-      🛡️ Debes ser mayor de 18 años. El sistema verifica tu edad con tu fecha de nacimiento y DNI.
+    <div class="alert alert-warning" style="margin-bottom:14px">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>El sistema valida tu edad con el DNI. Solo mayores de 18 anos pueden registrarse.</span>
     </div>
 
-    <button class="form-submit" id="btn-registro" onclick="doRegistro()">✅ Crear cuenta gratis</button>
+    <button class="btn btn-primary btn-full" id="btn-reg" onclick="doRegistro()">
+      <i class="fa-solid fa-user-plus"></i> Crear cuenta gratis
+    </button>
 
     <div class="form-footer">
-      ¿Ya tienes cuenta? <a href="/login/">Inicia sesión</a>
+      Ya tienes cuenta? <a href="/login/">Iniciar sesion</a>
     </div>
   </div>
 </div>
@@ -68,55 +84,60 @@
 
 {% block extra_js %}
 <script>
-if (localStorage.getItem('fb_access')) window.location.href = '/';
+if (isLoggedIn()) window.location.href = '/';
 
 async function doRegistro() {
-  const data = {
-    first_name: document.getElementById('first_name').value.trim(),
-    last_name: document.getElementById('last_name').value.trim(),
-    username: document.getElementById('username').value.trim(),
-    email: document.getElementById('email').value.trim(),
-    dni: document.getElementById('dni').value.trim(),
-    fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
-    password: document.getElementById('password').value,
-    password2: document.getElementById('password2').value,
+  const payload = {
+    first_name:       document.getElementById('f-nombre').value.trim(),
+    last_name:        document.getElementById('f-apellido').value.trim(),
+    username:         document.getElementById('f-username').value.trim(),
+    email:            document.getElementById('f-email').value.trim(),
+    dni:              document.getElementById('f-dni').value.trim(),
+    fecha_nacimiento: document.getElementById('f-fecha').value,
+    password:         document.getElementById('f-pass').value,
+    password2:        document.getElementById('f-pass2').value,
   };
 
-  const btn = document.getElementById('btn-registro');
-  const errEl = document.getElementById('msg-error');
-  const okEl = document.getElementById('msg-success');
-  errEl.style.display = 'none'; okEl.style.display = 'none';
+  const errWrap = document.getElementById('msg-error');
+  const okWrap  = document.getElementById('msg-ok');
+  errWrap.style.display = 'none'; okWrap.style.display = 'none';
 
-  if (!data.username || !data.email || !data.dni || !data.fecha_nacimiento || !data.password) {
-    showError('Completa todos los campos obligatorios'); return;
-  }
-  if (data.password !== data.password2) { showError('Las contraseñas no coinciden'); return; }
-  if (data.dni.length !== 8 || !/^\d+$/.test(data.dni)) { showError('El DNI debe tener exactamente 8 dígitos'); return; }
+  if (!payload.username || !payload.email || !payload.dni || !payload.fecha_nacimiento || !payload.password)
+    return showErr('Completa todos los campos obligatorios');
+  if (payload.password !== payload.password2)
+    return showErr('Las contrasenas no coinciden');
+  if (!/^\d{8}$/.test(payload.dni))
+    return showErr('El DNI debe tener exactamente 8 digitos numericos');
 
-  btn.disabled = true; btn.textContent = 'Creando cuenta...';
+  const btn = document.getElementById('btn-reg');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creando cuenta...';
 
   try {
     const res = await fetch('/api/usuarios/registro/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(payload)
     });
-    const resp = await res.json();
+    const data = await res.json();
     if (res.ok || res.status === 201) {
-      okEl.textContent = '¡Cuenta creada! Redirigiendo al login...';
-      okEl.style.display = 'block';
+      document.getElementById('ok-text').textContent = 'Cuenta creada correctamente. Redirigiendo al login...';
+      okWrap.style.display = 'flex';
       setTimeout(() => window.location.href = '/login/', 1800);
     } else {
-      const errs = Object.entries(resp).map(([k, v]) => `${k}: ${Array.isArray(v) ? v[0] : v}`).join(' | ');
-      showError(errs);
+      const errs = Object.entries(data).map(([k,v]) => `${Array.isArray(v)?v[0]:v}`).join(' | ');
+      showErr(errs);
     }
-  } catch { showError('Error de conexión. Intenta de nuevo.'); }
-  finally { btn.disabled = false; btn.textContent = '✅ Crear cuenta gratis'; }
+  } catch { showErr('Error de conexion. Intenta de nuevo.'); }
+  finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Crear cuenta gratis';
+  }
 }
 
-function showError(msg) {
-  const el = document.getElementById('msg-error');
-  el.textContent = msg; el.style.display = 'block';
+function showErr(msg) {
+  document.getElementById('error-text').textContent = msg;
+  document.getElementById('msg-error').style.display = 'flex';
 }
 </script>
 {% endblock %}
