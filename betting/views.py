@@ -245,6 +245,165 @@ class ApuestaInPlayView(APIView):
         }, status=status.HTTP_201_CREATED)
 
 
+def _crear_cuotas_mercado(mercado, tipo, cuotas_data):
+    """Crea las cuotas según el tipo de mercado.
+    Las selecciones deben coincidir con lo que busca eventos.js en el frontend.
+    """
+    from betting.models import Cuota
+    from decimal import Decimal as Dec
+
+    # (seleccion_en_bd, clave_en_payload, valor_por_defecto)
+    # seleccion_en_bd debe coincidir con los `sel` en CONFIGS de eventos.js
+    SELECCIONES = {
+        '1X2':        [('1',          'cuota_local',      '2.00'),
+                       ('empate',     'cuota_empate',     '3.50'),
+                       ('2',          'cuota_visitante',  '3.00')],
+        'over_under': [('over',       'over',             '1.90'),
+                       ('under',      'under',            '1.95')],
+        'btts':       [('si',         'si',               '2.10'),
+                       ('no',         'no',               '1.70')],
+        'handicap':   [('local',      'local',            '1.85'),
+                       ('visitante',  'visitante',        '1.95')],
+        'goleador':   [('local',      'local',            '2.50'),
+                       ('visitante',  'visitante',        '2.50')],
+    }
+    for seleccion, key, default in SELECCIONES.get(tipo, []):
+        valor = Dec(str(cuotas_data.get(key, default)))
+        Cuota.objects.create(mercado=mercado, seleccion=seleccion, valor=valor)
+
+
+class CrearEventoView(APIView):
+    """POST /api/eventos/crear/ — Solo staff. Crea evento con uno o más mercados."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request):
+        from betting.models import Cuota, Mercado
+
+        data = request.data
+        for campo in ['equipo_local', 'equipo_visitante', 'fecha_inicio']:
+            if not data.get(campo):
+                return Response({'error': f'Campo requerido: {campo}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        nombre = data.get('nombre') or f"{data['equipo_local']} vs {data['equipo_visitante']}"
+        try:
+            evento = Evento.objects.create(
+                nombre=nombre,
+                deporte=data.get('deporte', 'futbol'),
+                equipo_local=data['equipo_local'],
+                equipo_visitante=data['equipo_visitante'],
+                fecha_inicio=data['fecha_inicio'],
+            )
+            mercados_input = data.get('mercados', [])
+            # Si no envían mercados, crear 1X2 por defecto
+            if not mercados_input:
+                mercados_input = [{'tipo': '1X2', 'cuotas': {}}]
+
+            for m in mercados_input:
+                tipo = m.get('tipo')
+                if not tipo:
+                    continue
+                # Evitar duplicados
+                if Mercado.objects.filter(evento=evento, tipo=tipo).exists():
+                    continue
+                mercado = Mercado.objects.create(evento=evento, tipo=tipo)
+                _crear_cuotas_mercado(mercado, tipo, m.get('cuotas', {}))
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'mensaje': 'Evento creado.', 'evento_id': evento.id, 'nombre': evento.nombre}, status=status.HTTP_201_CREATED)
+
+
+class AgregarMercadoView(APIView):
+    """POST /api/eventos/<pk>/mercados/ — Solo staff. Agrega un mercado a un evento existente."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, pk):
+        from betting.models import Cuota, Mercado
+
+        tipo = request.data.get('tipo')
+        if not tipo:
+            return Response({'error': 'El campo tipo es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            evento = Evento.objects.get(pk=pk)
+        except Evento.DoesNotExist:
+            return Response({'error': 'Evento no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if Mercado.objects.filter(evento=evento, tipo=tipo).exists():
+            return Response({'error': f'El evento ya tiene un mercado de tipo {tipo}.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            mercado = Mercado.objects.create(evento=evento, tipo=tipo)
+            _crear_cuotas_mercado(mercado, tipo, request.data.get('cuotas', {}))
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'mensaje': f'Mercado {tipo} agregado al evento {evento.nombre}.', 'mercado_id': mercado.id}, status=status.HTTP_201_CREATED)
+
+
+class ListarUsuariosView(APIView):
+    """GET /api/admin/usuarios/ — Solo staff. Lista todos los usuarios."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        from users.models import Usuario
+        usuarios = Usuario.objects.all().order_by('-date_joined').values(
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'estado', 'is_staff', 'is_superuser', 'date_joined'
+        )
+        return Response(list(usuarios))
+
+
+class EditarUsuarioAdminView(APIView):
+    """PATCH /api/admin/usuarios/<pk>/ — Solo staff. Edita rol y estado de un usuario."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def patch(self, request, pk):
+        from users.models import Usuario
+
+        try:
+            usuario = Usuario.objects.get(pk=pk)
+        except Usuario.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # No permitir que alguien se quite sus propios permisos
+        if usuario == request.user and not request.data.get('is_superuser', True):
+            return Response({'error': 'No puedes modificar tu propio rol.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        campos = {}
+        if 'is_staff' in request.data:
+            campos['is_staff'] = bool(request.data['is_staff'])
+        if 'is_superuser' in request.data:
+            campos['is_superuser'] = bool(request.data['is_superuser'])
+            if campos['is_superuser']:
+                campos['is_staff'] = True  # superuser siempre es staff
+        if 'estado' in request.data:
+            estados_validos = ['verificado', 'pendiente_verificacion', 'bloqueado', 'autoexcluido']
+            if request.data['estado'] not in estados_validos:
+                return Response({'error': 'Estado no válido.'}, status=status.HTTP_400_BAD_REQUEST)
+            campos['estado'] = request.data['estado']
+        if 'first_name' in request.data:
+            campos['first_name'] = request.data['first_name']
+        if 'last_name' in request.data:
+            campos['last_name'] = request.data['last_name']
+        if 'email' in request.data:
+            campos['email'] = request.data['email']
+
+        for campo, valor in campos.items():
+            setattr(usuario, campo, valor)
+        usuario.save(update_fields=list(campos.keys()))
+
+        return Response({
+            'mensaje': f'Usuario {usuario.username} actualizado.',
+            'id': usuario.id,
+            'username': usuario.username,
+            'is_staff': usuario.is_staff,
+            'is_superuser': usuario.is_superuser,
+            'estado': usuario.estado,
+        })
+
+
 class CrearApuestaCombinada_View(APIView):
     """
     POST /api/apuestas/combinada/ — Crea una apuesta acumuladora.
@@ -274,8 +433,12 @@ class CrearApuestaCombinada_View(APIView):
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except SeleccionMutuamenteExcluyenteError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except (EventoNoDisponibleError, MercadoCerradoError, MontoFueraDeRangoError) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except SaldoInsuficienteError as e:
             return Response({"error": str(e)}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             "combinada": ApuestaCombinada_Serializer(combinada).data,

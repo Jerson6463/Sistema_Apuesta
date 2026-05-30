@@ -289,7 +289,6 @@ def crear_apuesta_combinada(
         cuota_total=cuota_total,
         pago_potencial=monto * cuota_total,
         clave_idempotencia=clave_idempotencia,
-        ip_origen=ip_origen,
     )
     combinada.selecciones.set(cuotas)
 
