@@ -189,7 +189,8 @@ input, select, textarea { font-family: inherit; }
   align-items: center; gap: 16px; margin-bottom: 14px;
 }
 .equipo { text-align: center; }
-.equipo-flag { font-size: 32px; margin-bottom: 6px; display: block; }
+.equipo-flag { width: 48px; height: 32px; object-fit: cover; border-radius: 4px; margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto; }
+.equipo-flag-placeholder { width: 48px; height: 32px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-3); margin: 0 auto 8px; }
 .equipo-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
 .equipo-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px; }
 .vs-badge {

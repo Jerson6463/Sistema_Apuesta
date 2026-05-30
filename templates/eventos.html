@@ -138,115 +138,23 @@ function filtrar(estado, el) {
   renderEventos(lista);
 }
 
-function renderEventos(lista) {
-  const lbl = document.getElementById('label-total');
+async function renderEventos(lista) {
+  const wrap = document.getElementById('eventos-wrap');
+  const lbl  = document.getElementById('label-total');
   if (lbl) lbl.textContent = `${lista.length} evento${lista.length!==1?'s':''}`;
 
   if (!lista.length) {
-    document.getElementById('eventos-wrap').innerHTML =
-      '<p style="text-align:center;padding:60px;color:var(--text-3)">No hay eventos con ese filtro.</p>';
+    wrap.innerHTML = '<p style="text-align:center;padding:60px;color:var(--text-3)">No hay eventos con ese filtro.</p>';
     return;
   }
-
-  document.getElementById('eventos-wrap').innerHTML = lista.map(ev => {
-    const fecha = new Date(ev.fecha_inicio).toLocaleString('es-PE', {weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    const vivo  = ev.estado==='en_vivo';
-    return `
-    <div class="evento-card">
-      <div class="evento-meta">
-        <span class="liga"><i class="fa-solid fa-earth-americas"></i> Mundial 2026 &middot; Fase de Grupos</span>
-        ${vivo
-          ? '<span class="live-badge"><span class="live-dot"></span> EN VIVO</span>'
-          : `<span style="display:flex;align-items:center;gap:5px"><i class="fa-regular fa-clock"></i>${fecha}</span>`}
-      </div>
-      <div class="evento-body">
-        <div class="equipos">
-          <div class="equipo">
-            <span class="equipo-flag">${FLAGS[ev.equipo_local]||''}</span>
-            <div class="equipo-name">${ev.equipo_local}</div>
-            <div class="equipo-label">Local</div>
-          </div>
-          <div class="vs-badge">VS</div>
-          <div class="equipo">
-            <span class="equipo-flag">${FLAGS[ev.equipo_visitante]||''}</span>
-            <div class="equipo-name">${ev.equipo_visitante}</div>
-            <div class="equipo-label">Visitante</div>
-          </div>
-        </div>
-        <div id="mkt-${ev.id}">
-          <div style="text-align:center;padding:14px;color:var(--text-3);font-size:13px">
-            <i class="fa-solid fa-spinner fa-spin"></i>
-          </div>
-        </div>
-        <div class="evento-footer">
-          <a href="/eventos/${ev.id}/" class="mas-mercados">
-            Mas mercados <i class="fa-solid fa-chevron-right"></i>
-          </a>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  lista.forEach(ev => cargarMercados(ev));
+  wrap.innerHTML = '';
+  for (const ev of lista) {
+    const detRes = await apiFetch(`/api/eventos/${ev.id}/`);
+    const det = detRes?.ok ? await detRes.json() : null;
+    const mercados = det?.mercados?.filter(m => ['1X2','over_under','btts'].includes(m.tipo)) || [];
+    wrap.appendChild(buildEventoCard(ev, mercados));
+  }
   marcarCuotasActivas();
-}
-
-async function cargarMercados(ev) {
-  try {
-    const res = await apiFetch(`/api/eventos/${ev.id}/`);
-    if (!res.ok) return;
-    const det = await res.json();
-    const el  = document.getElementById(`mkt-${ev.id}`);
-    if (!el) return;
-
-    const m1x2 = det.mercados?.find(m=>m.tipo==='1X2');
-    const mOU  = det.mercados?.find(m=>m.tipo==='over_under');
-    const mBTTS= det.mercados?.find(m=>m.tipo==='btts');
-
-    let html = '';
-    if (m1x2) {
-      const L=m1x2.cuotas.find(c=>c.seleccion==='local');
-      const E=m1x2.cuotas.find(c=>c.seleccion==='empate');
-      const V=m1x2.cuotas.find(c=>c.seleccion==='visitante');
-      html += `
-        <div class="mercado-label"><i class="fa-solid fa-chart-simple"></i> 1X2 &mdash; Resultado</div>
-        <div class="cuotas-row">
-          ${L?qBtn(L.id,ev.equipo_local,'1',L.valor,ev.nombre,'1X2'):''}
-          ${E?qBtn(E.id,'Empate','X',E.valor,ev.nombre,'1X2'):''}
-          ${V?qBtn(V.id,ev.equipo_visitante,'2',V.valor,ev.nombre,'1X2'):''}
-        </div>`;
-    }
-    if (mOU) {
-      const O=mOU.cuotas.find(c=>c.seleccion==='over');
-      const U=mOU.cuotas.find(c=>c.seleccion==='under');
-      html += `
-        <div class="mercado-label" style="margin-top:12px"><i class="fa-solid fa-arrow-up-9-1"></i> Over/Under 2.5 goles</div>
-        <div class="cuotas-row">
-          ${O?qBtn(O.id,'Mas de 2.5','Over',O.valor,ev.nombre,'O/U'):''}
-          ${U?qBtn(U.id,'Menos de 2.5','Under',U.valor,ev.nombre,'O/U'):''}
-        </div>`;
-    }
-    if (mBTTS) {
-      const S=mBTTS.cuotas.find(c=>c.seleccion==='si');
-      const N=mBTTS.cuotas.find(c=>c.seleccion==='no');
-      html += `
-        <div class="mercado-label" style="margin-top:12px"><i class="fa-solid fa-arrows-left-right"></i> Ambos equipos anotan</div>
-        <div class="cuotas-row">
-          ${S?qBtn(S.id,'Si anotan','Si',S.valor,ev.nombre,'BTTS'):''}
-          ${N?qBtn(N.id,'No ambos','No',N.valor,ev.nombre,'BTTS'):''}
-        </div>`;
-    }
-    el.innerHTML = html || '<p style="color:var(--text-3);font-size:13px">Sin mercados disponibles</p>';
-    marcarCuotasActivas();
-  } catch {}
-}
-
-function qBtn(id, sel, label, val, evento, mercado) {
-  return `<div class="cuota-btn" data-cuota="${id}"
-    onclick="addToBetslip(${id},'${sel}',${parseFloat(val)},'${evento.replace(/'/g,"\\'")}','${mercado}')">
-    <div class="qlabel">${label}</div>
-    <div class="qval">${parseFloat(val).toFixed(2)}</div>
-  </div>`;
 }
 
 function scrollToMercado(tipo) { window.scrollTo({top:0,behavior:'smooth'}); }

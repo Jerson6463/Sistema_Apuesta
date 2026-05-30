@@ -113,16 +113,14 @@
 
 {% block extra_js %}
 <script>
-const FLAGS = { Peru:'🇵🇪', Brasil:'🇧🇷', Argentina:'🇦🇷', Mexico:'🇲🇽', Uruguay:'🇺🇾', Colombia:'🇨🇴' };
-
 async function cargarEventos() {
-  const token = localStorage.getItem('fb_access');
-  if (!token) {
-    document.getElementById('eventos-wrap').innerHTML = `
+  const wrap = document.getElementById('eventos-wrap');
+  if (!isLoggedIn()) {
+    wrap.innerHTML = `
       <div class="alert alert-info">
         <i class="fa-solid fa-circle-info"></i>
         <span>Inicia sesion para ver las cuotas en tiempo real.
-          <a href="/login/" style="color:var(--primary);font-weight:700;margin-left:4px">Entrar</a>
+          <a href="/login/" style="color:var(--primary);font-weight:700;margin-left:4px">Iniciar sesion</a>
         </span>
       </div>`;
     return;
@@ -130,93 +128,19 @@ async function cargarEventos() {
   try {
     const res = await apiFetch('/api/eventos/');
     if (!res.ok) throw new Error();
-    const evs = await res.json();
-    renderEventos(evs.slice(0, 3));
-  } catch {
-    document.getElementById('eventos-wrap').innerHTML =
-      '<div class="alert alert-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Error al cargar eventos.</span></div>';
-  }
-}
-
-function renderEventos(evs) {
-  if (!evs.length) {
-    document.getElementById('eventos-wrap').innerHTML =
-      '<p style="text-align:center;padding:48px;color:var(--text-3)">No hay eventos disponibles.</p>';
-    return;
-  }
-  document.getElementById('eventos-wrap').innerHTML = evs.map(ev => buildEventoCard(ev)).join('');
-  evs.forEach(ev => cargarCuotasEvento(ev.id, ev.nombre, ev.equipo_local, ev.equipo_visitante));
-  marcarCuotasActivas();
-}
-
-function buildEventoCard(ev) {
-  const fecha = new Date(ev.fecha_inicio).toLocaleString('es-PE', { weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-  const esVivo = ev.estado === 'en_vivo';
-  return `
-  <div class="evento-card">
-    <div class="evento-meta">
-      <span class="liga"><i class="fa-solid fa-earth-americas"></i> Mundial 2026 &middot; Fase de Grupos</span>
-      <div style="display:flex;align-items:center;gap:10px">
-        ${esVivo ? '<span class="live-badge"><span class="live-dot"></span> EN VIVO</span>' : `<span><i class="fa-regular fa-clock"></i> ${fecha}</span>`}
-      </div>
-    </div>
-    <div class="evento-body">
-      <div class="equipos">
-        <div class="equipo">
-          <span class="equipo-flag">${FLAGS[ev.equipo_local] || ''}</span>
-          <div class="equipo-name">${ev.equipo_local}</div>
-          <div class="equipo-label">Local</div>
-        </div>
-        <div class="vs-badge">VS</div>
-        <div class="equipo">
-          <span class="equipo-flag">${FLAGS[ev.equipo_visitante] || ''}</span>
-          <div class="equipo-name">${ev.equipo_visitante}</div>
-          <div class="equipo-label">Visitante</div>
-        </div>
-      </div>
-      <div id="cuotas-ev-${ev.id}">
-        <div style="text-align:center;padding:16px;color:var(--text-3);font-size:13px">
-          <i class="fa-solid fa-spinner fa-spin"></i> Cargando cuotas...
-        </div>
-      </div>
-      <div class="evento-footer">
-        <a href="/eventos/${ev.id}/" class="mas-mercados">
-          Ver todos los mercados <i class="fa-solid fa-chevron-right"></i>
-        </a>
-      </div>
-    </div>
-  </div>`;
-}
-
-async function cargarCuotasEvento(id, nombre, local, visitante) {
-  try {
-    const res = await apiFetch(`/api/eventos/${id}/`);
-    if (!res.ok) return;
-    const ev = await res.json();
-    const m1x2 = ev.mercados?.find(m => m.tipo === '1X2');
-    if (!m1x2) return;
-    const L = m1x2.cuotas.find(c => c.seleccion === 'local');
-    const E = m1x2.cuotas.find(c => c.seleccion === 'empate');
-    const V = m1x2.cuotas.find(c => c.seleccion === 'visitante');
-    const el = document.getElementById(`cuotas-ev-${id}`);
-    if (!el) return;
-    el.innerHTML = `
-      <div class="mercado-label"><i class="fa-solid fa-1"></i>&nbsp;1X2 &mdash; Resultado del partido</div>
-      <div class="cuotas-row">
-        ${L ? cuotaHtml(L.id, local.substring(0,3).toUpperCase() + ' Gana', '1', L.valor, nombre, '1X2') : ''}
-        ${E ? cuotaHtml(E.id, 'Empate', 'X', E.valor, nombre, '1X2') : ''}
-        ${V ? cuotaHtml(V.id, visitante.substring(0,3).toUpperCase() + ' Gana', '2', V.valor, nombre, '1X2') : ''}
-      </div>`;
+    const eventos = await res.json();
+    wrap.innerHTML = '';
+    for (const ev of eventos.slice(0, 3)) {
+      const detRes = await apiFetch(`/api/eventos/${ev.id}/`);
+      const det = detRes?.ok ? await detRes.json() : null;
+      const mercados = det?.mercados?.filter(m => ['1X2','over_under','btts'].includes(m.tipo)) || [];
+      const card = buildEventoCard(ev, mercados);
+      wrap.appendChild(card);
+    }
     marcarCuotasActivas();
-  } catch {}
-}
-
-function cuotaHtml(id, sel, label, val, evento, mercado) {
-  return `<div class="cuota-btn" data-cuota="${id}"
-    onclick="addToBetslip(${id},'${sel}',${val},'${evento}','${mercado}')">
-    <div class="qlabel">${label}</div>
-    <div class="qval">${parseFloat(val).toFixed(2)}</div>
-  </div>`;
+  } catch (e) {
+    wrap.innerHTML = '<div class="alert alert-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Error al cargar eventos.</span></div>';
+  }
 }
 
 cargarEventos();
