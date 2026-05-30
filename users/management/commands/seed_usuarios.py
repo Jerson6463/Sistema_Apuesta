@@ -13,6 +13,18 @@ from users.models import Usuario
 
 USUARIOS_SEED = [
     {
+        "username": "superadmin",
+        "email": "superadmin@fairbet.edu",
+        "dni": "00000001",
+        "fecha_nacimiento": date(1980, 1, 1),
+        "first_name": "Super",
+        "last_name": "Admin",
+        "estado": "verificado",
+        "is_staff": True,
+        "is_superuser": True,
+        "fichas": Decimal("0"),
+    },
+    {
         "username": "admin_fairbet",
         "email": "admin@fairbet.edu",
         "dni": "12345678",
@@ -22,6 +34,18 @@ USUARIOS_SEED = [
         "estado": "verificado",
         "is_staff": True,
         "is_superuser": True,
+        "fichas": Decimal("0"),
+    },
+    {
+        "username": "operador_fairbet",
+        "email": "operador@fairbet.edu",
+        "dni": "99887766",
+        "fecha_nacimiento": date(1990, 5, 15),
+        "first_name": "Operador",
+        "last_name": "FairBet",
+        "estado": "verificado",
+        "is_staff": True,
+        "is_superuser": False,
         "fichas": Decimal("0"),
     },
     {

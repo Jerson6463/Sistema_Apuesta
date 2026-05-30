@@ -45,8 +45,9 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
         fields = (
             "id", "username", "email", "first_name", "last_name",
             "dni", "fecha_nacimiento", "estado", "saldo", "date_joined",
+            "is_staff", "is_superuser",
         )
-        read_only_fields = ("id", "estado", "saldo", "date_joined", "dni")
+        read_only_fields = ("id", "estado", "saldo", "date_joined", "dni", "is_staff", "is_superuser")
 
     def get_saldo(self, obj):
         from wallet.services import obtener_saldo
