@@ -53,3 +53,40 @@ class AutoExclusionesListView(generics.ListAPIView):
 
     def get_queryset(self):
         return AutoExclusion.objects.filter(usuario=self.request.user)
+
+
+class VerificarKYCView(APIView):
+    """
+    POST /api/usuarios/<id>/verificar-kyc/
+    Solo staff. Aprueba o rechaza la cuenta de un usuario (KYC simulado).
+    Body: { "accion": "aprobar" | "rechazar" | "bloquear" }
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    TRANSICIONES_VALIDAS = {
+        "aprobar": "verificado",
+        "rechazar": "pendiente_verificacion",
+        "bloquear": "bloqueado",
+    }
+
+    def post(self, request, pk):
+        try:
+            usuario = Usuario.objects.get(pk=pk)
+        except Usuario.DoesNotExist:
+            return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        accion = request.data.get("accion")
+        if accion not in self.TRANSICIONES_VALIDAS:
+            return Response(
+                {"error": f"Acción inválida. Opciones: {list(self.TRANSICIONES_VALIDAS)}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        nuevo_estado = self.TRANSICIONES_VALIDAS[accion]
+        usuario.estado = nuevo_estado
+        usuario.save(update_fields=["estado"])
+
+        return Response({
+            "mensaje": f"Usuario {usuario.username} actualizado a '{nuevo_estado}'.",
+            "estado_actual": nuevo_estado,
+        })
