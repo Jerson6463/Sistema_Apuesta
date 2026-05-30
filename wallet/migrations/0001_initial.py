@@ -1,0 +1,75 @@
+import uuid
+import django.db.models.deletion
+from django.conf import settings
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    initial = True
+
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name="EntradaContable",
+            fields=[
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("cuenta", models.CharField(
+                    choices=[
+                        ("wallet_usuario", "Wallet del usuario"),
+                        ("casa", "Casa de apuestas"),
+                        ("apuestas_pendientes", "Apuestas pendientes"),
+                        ("bonos", "Bonos promocionales"),
+                    ],
+                    max_length=30,
+                    verbose_name="Cuenta contable",
+                )),
+                ("monto", models.DecimalField(decimal_places=4, max_digits=18, verbose_name="Monto")),
+                ("direccion", models.CharField(
+                    choices=[("DEBITO", "Débito"), ("CREDITO", "Crédito")],
+                    max_length=6,
+                    verbose_name="Dirección",
+                )),
+                ("id_transaccion", models.UUIDField(db_index=True, verbose_name="ID de transacción (idempotency key)")),
+                ("tipo_referencia", models.CharField(
+                    choices=[
+                        ("recarga", "Recarga de fichas"),
+                        ("retiro", "Retiro de fichas"),
+                        ("apuesta", "Apuesta"),
+                        ("pago_ganancia", "Pago de ganancia"),
+                        ("perdida", "Pérdida a la casa"),
+                        ("devolucion", "Devolución por anulación"),
+                        ("bono", "Bono promocional"),
+                        ("cash_out", "Cash-out anticipado"),
+                    ],
+                    max_length=20,
+                    verbose_name="Tipo de referencia",
+                )),
+                ("referencia_id", models.UUIDField(blank=True, null=True, verbose_name="ID del objeto referenciado")),
+                ("creado_en", models.DateTimeField(auto_now_add=True, verbose_name="Creado en")),
+                ("usuario", models.ForeignKey(
+                    blank=True,
+                    null=True,
+                    on_delete=django.db.models.deletion.PROTECT,
+                    related_name="entradas_contables",
+                    to=settings.AUTH_USER_MODEL,
+                    verbose_name="Usuario",
+                )),
+            ],
+            options={
+                "verbose_name": "Entrada contable",
+                "verbose_name_plural": "Entradas contables",
+                "ordering": ["creado_en"],
+            },
+        ),
+        migrations.AddConstraint(
+            model_name="entradacontable",
+            constraint=models.UniqueConstraint(
+                fields=["id_transaccion", "cuenta", "direccion"],
+                name="unicidad_entrada_transaccion",
+            ),
+        ),
+    ]
