@@ -32,7 +32,7 @@ USUARIOS_SEED = [
         "first_name": "Carlos",
         "last_name": "Rios",
         "estado": "verificado",
-        "fichas": Decimal("1000.0000"),
+        "fichas": Decimal("500.0000"),
     },
     {
         "username": "jugador_pendiente",
