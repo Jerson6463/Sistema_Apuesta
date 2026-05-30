@@ -130,6 +130,75 @@ class CashOutView(APIView):
         })
 
 
+class ApuestaInPlayView(APIView):
+    """
+    POST /api/apuestas/in-play/
+    Apuesta mientras el evento está EN_VIVO con cuotas dinámicas.
+    El mercado debe estar ABIERTO (no suspendido por evento crítico).
+    Incluye mensaje de consumo responsable obligatorio.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    MENSAJE_RESPONSABLE = (
+        "Apuesta en vivo con responsabilidad. Las cuotas cambian constantemente. "
+        "Plataforma educativa con moneda virtual. No constituye una casa de apuestas."
+    )
+
+    def post(self, request):
+        from betting.models import Cuota, EstadoEvento, EstadoMercado
+        from betting.exceptions import EventoNoDisponibleError, MercadoCerradoError
+        import uuid as uuid_mod
+
+        cuota_id = request.data.get("cuota_id")
+        monto = request.data.get("monto")
+        clave = request.data.get("clave_idempotencia", str(uuid_mod.uuid4()))
+
+        if not cuota_id or not monto:
+            return Response({"error": "cuota_id y monto son requeridos."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            cuota = Cuota.objects.select_related("mercado__evento").get(pk=cuota_id, activa=True)
+        except Cuota.DoesNotExist:
+            return Response({"error": "Cuota no encontrada o inactiva."}, status=status.HTTP_404_NOT_FOUND)
+
+        evento = cuota.mercado.evento
+        if evento.estado != EstadoEvento.EN_VIVO:
+            return Response(
+                {"error": "Este endpoint solo acepta apuestas en eventos EN VIVO."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if cuota.mercado.estado != EstadoMercado.ABIERTO:
+            return Response(
+                {"error": "Mercado suspendido temporalmente por evento crítico. Intente en unos segundos."},
+                status=status.HTTP_423_LOCKED,
+            )
+
+        from decimal import Decimal as Dec
+        from betting.services import crear_apuesta
+        from betting.exceptions import UsuarioNoHabilitadoError, MontoFueraDeRangoError
+        from wallet.exceptions import SaldoInsuficienteError
+
+        try:
+            apuesta = crear_apuesta(
+                usuario=request.user,
+                cuota=cuota,
+                monto=Dec(str(monto)),
+                clave_idempotencia=uuid_mod.UUID(str(clave)),
+                ip_origen=request.META.get("REMOTE_ADDR"),
+            )
+        except UsuarioNoHabilitadoError as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except (MontoFueraDeRangoError, MercadoCerradoError) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except SaldoInsuficienteError as e:
+            return Response({"error": str(e)}, status=status.HTTP_402_PAYMENT_REQUIRED)
+
+        return Response({
+            "apuesta": ApuestaSerializer(apuesta).data,
+            "aviso_responsable": self.MENSAJE_RESPONSABLE,
+        }, status=status.HTTP_201_CREATED)
+
+
 class CrearApuestaCombinada_View(APIView):
     """
     POST /api/apuestas/combinada/ — Crea una apuesta acumuladora.
