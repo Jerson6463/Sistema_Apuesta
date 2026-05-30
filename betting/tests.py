@@ -306,3 +306,49 @@ class PagoCalculadoTest(TestCase):
         self.cuota.save()
         apuesta.refresh_from_db()
         self.assertEqual(apuesta.cuota_al_apostar, valor_original)
+
+
+class ApuestaCombinada_Test(TestCase):
+    """Tests de apuesta combinada: cuota total, selecciones excluyentes y liquidación."""
+
+    def setUp(self):
+        self.usuario = crear_usuario_verificado("kelly_comb")
+        recargar_fichas(self.usuario, Decimal("500.0000"), id_transaccion=uuid.uuid4())
+        self.evento = crear_evento_programado()
+        self.mercado, self.cuota_local = crear_mercado_y_cuotas(self.evento)
+
+    def test_selecciones_mismo_mercado_lanza_error(self):
+        from betting.services import crear_apuesta_combinada
+        from betting.exceptions import SeleccionMutuamenteExcluyenteError
+        from betting.models import Cuota
+
+        cuota_visitante = Cuota.objects.get(mercado=self.mercado, seleccion="visitante")
+        with self.assertRaises(SeleccionMutuamenteExcluyenteError):
+            crear_apuesta_combinada(
+                usuario=self.usuario,
+                cuotas=[self.cuota_local, cuota_visitante],
+                monto=Decimal("50.0000"),
+                clave_idempotencia=uuid.uuid4(),
+            )
+
+    def test_cuota_total_es_producto_de_cuotas_individuales(self):
+        from betting.services import crear_apuesta_combinada
+        from betting.models import Cuota, Mercado, EstadoMercado
+
+        evento2 = crear_evento_programado()
+        evento2.nombre = "Otro Partido Test"
+        evento2.save()
+        mercado2 = Mercado.objects.create(
+            evento=evento2, tipo="1X2", estado=EstadoMercado.ABIERTO,
+            monto_minimo=Decimal("1.0000"), monto_maximo=Decimal("1000.0000"),
+        )
+        cuota2 = Cuota.objects.create(mercado=mercado2, seleccion="local", valor=Decimal("2.0000"), activa=True)
+
+        combinada = crear_apuesta_combinada(
+            usuario=self.usuario,
+            cuotas=[self.cuota_local, cuota2],
+            monto=Decimal("50.0000"),
+            clave_idempotencia=uuid.uuid4(),
+        )
+        cuota_esperada = self.cuota_local.valor * cuota2.valor
+        self.assertEqual(combinada.cuota_total, cuota_esperada)
