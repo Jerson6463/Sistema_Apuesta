@@ -304,11 +304,22 @@ def crear_apuesta_combinada(
 
 
 def registrar_cambio_cuota(cuota: Cuota, nuevo_valor: Decimal) -> None:
-    """Registra el historial antes de cambiar la cuota."""
+    """Registra el historial, actualiza la cuota y notifica via WebSocket."""
+    valor_anterior = cuota.valor
     HistorialCuota.objects.create(
         cuota=cuota,
-        valor_anterior=cuota.valor,
+        valor_anterior=valor_anterior,
         valor_nuevo=nuevo_valor,
     )
     cuota.valor = nuevo_valor
     cuota.save(update_fields=["valor", "actualizado_en"])
+
+    # Notificar a suscriptores WebSocket de forma asíncrona (no bloquea la request)
+    from betting.tasks import publicar_actualizacion_cuota
+    publicar_actualizacion_cuota.delay(
+        evento_id=cuota.mercado.evento_id,
+        cuota_id=cuota.id,
+        seleccion=cuota.seleccion,
+        valor_anterior=str(valor_anterior),
+        valor_nuevo=str(nuevo_valor),
+    )
