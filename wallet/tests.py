@@ -165,3 +165,55 @@ class LimiteJuegoWalletTest(TestCase):
         # límite diario por defecto es 500
         with self.assertRaises(LimiteSuperadoError):
             recargar_fichas(usuario, Decimal("9999.0000"), id_transaccion=uuid.uuid4())
+
+
+class ConcurrenciaDobleGastoTest(TestCase):
+    """
+    Simula N requests simultáneas de apuesta y verifica que no haya doble gasto.
+    Usa threading para lanzar operaciones en paralelo contra la misma cuenta.
+    """
+
+    def test_n_recargas_simultaneas_misma_id_transaccion_no_duplican(self):
+        import threading
+        usuario = crear_usuario_verificado()
+        id_tx = uuid.uuid4()
+        errores = []
+
+        def intentar_recarga():
+            try:
+                recargar_fichas(usuario, Decimal("100.0000"), id_transaccion=id_tx)
+            except Exception as e:
+                errores.append(e)
+
+        hilos = [threading.Thread(target=intentar_recarga) for _ in range(5)]
+        for h in hilos:
+            h.start()
+        for h in hilos:
+            h.join()
+
+        # Solo una recarga debe haberse procesado (idempotencia)
+        from wallet.services import obtener_saldo
+        saldo = obtener_saldo(usuario)
+        self.assertEqual(saldo, Decimal("100.0000"))
+
+    def test_retiro_concurrente_no_genera_saldo_negativo(self):
+        import threading
+        usuario = crear_usuario_verificado()
+        recargar_fichas(usuario, Decimal("100.0000"), id_transaccion=uuid.uuid4())
+        errores = []
+
+        def intentar_retiro():
+            try:
+                retirar_fichas(usuario, Decimal("60.0000"), id_transaccion=uuid.uuid4())
+            except Exception as e:
+                errores.append(e)
+
+        hilos = [threading.Thread(target=intentar_retiro) for _ in range(3)]
+        for h in hilos:
+            h.start()
+        for h in hilos:
+            h.join()
+
+        from wallet.services import obtener_saldo
+        saldo_final = obtener_saldo(usuario)
+        self.assertGreaterEqual(saldo_final, Decimal("0"))
